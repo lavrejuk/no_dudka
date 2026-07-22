@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.1</title>
+    <title>Трекер привычек v9.2</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -392,7 +392,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.1 (CloudStorage + fix)');
+            console.log('🚀 Запуск трекера v9.2 (исправлено сохранение имени)');
 
             // Telegram WebApp
             const tg = window.Telegram?.WebApp;
@@ -407,8 +407,8 @@
                 document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
             }
 
-            // Проверка доступности CloudStorage
-            const cloudAvailable = !!(tg?.CloudStorage);
+            // Проверка CloudStorage
+            const cloudAvailable = !!(tg?.CloudStorage && typeof tg.CloudStorage.getItem === 'function' && typeof tg.CloudStorage.setItem === 'function');
             console.log('CloudStorage доступен:', cloudAvailable);
 
             // localStorage fallback
@@ -539,15 +539,21 @@
                 });
             }
 
-            // ========== Имя пользователя (с защитой от мусора) ==========
+            // ========== Имя пользователя (с обработкой ошибок) ==========
             async function saveName() {
-                const val = $('name-input').value.trim();
-                if (!val) return alert('Введи имя!');
-                userName = val;
-                // Явно приводим к строке для надёжности
-                await saveData('my_username', String(userName));
-                welcomeTitle.textContent = 'Привет, ' + userName + '!';
-                await loadApp();
+                try {
+                    const val = $('name-input').value.trim();
+                    if (!val) return alert('Введи имя!');
+                    userName = val;
+                    console.log('Сохраняем имя:', userName);
+                    await saveData('my_username', String(userName));
+                    welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                    console.log('Имя сохранено, загружаем приложение');
+                    await loadApp();
+                } catch(e) {
+                    console.error('Ошибка при сохранении имени:', e);
+                    alert('Не удалось сохранить имя. Попробуй ещё раз.');
+                }
             }
 
             // ========== Эмодзи пикер (без поля ввода) ==========
@@ -946,15 +952,24 @@
 
             // ========== Старт с защитой от мусорного имени ==========
             async function init() {
-                const savedName = await loadData('my_username');
-                // Проверка валидности имени
-                if (savedName && typeof savedName === 'string' && savedName.trim() !== '' && savedName !== '[object Object]') {
-                    userName = savedName.trim();
-                    welcomeTitle.textContent = 'Привет, ' + userName + '!';
-                    await loadApp();
-                } else {
-                    // Если имя испорчено или отсутствует – чистим хранилище и показываем экран ввода
-                    await saveData('my_username', '');
+                try {
+                    const savedName = await loadData('my_username');
+                    console.log('Загруженное имя:', savedName);
+                    if (savedName && typeof savedName === 'string' && savedName.trim() !== '' && savedName !== '[object Object]') {
+                        userName = savedName.trim();
+                        welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                        await loadApp();
+                    } else {
+                        // Имя повреждено или отсутствует – сбрасываем и показываем экран ввода
+                        if (savedName) {
+                            console.warn('Обнаружено мусорное имя, сброс:', savedName);
+                        }
+                        await saveData('my_username', '');
+                        showScreen('name');
+                        $('name-input').focus();
+                    }
+                } catch(e) {
+                    console.error('Ошибка инициализации:', e);
                     showScreen('name');
                     $('name-input').focus();
                 }
