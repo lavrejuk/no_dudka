@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.5</title>
+    <title>Трекер привычек v9.6</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -303,6 +303,16 @@
             margin: 6px;
             font-size: 14px;
         }
+
+        .storage-badge {
+            display: inline-block;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin: 8px 0;
+            background: var(--secondary-bg);
+            color: var(--hint);
+        }
     </style>
 </head>
 <body>
@@ -365,6 +375,7 @@
         <h2 id="tracker-title">Твои привычки</h2>
         <div id="habits-container"></div>
         <div id="total-money" class="money" style="margin-top: 12px; font-weight: 600; font-size: 15px;"></div>
+        <div id="storage-indicator-tracker" class="storage-badge"></div>
         <div class="divider"></div>
         <button id="btn-open-settings" class="outline" style="border-color: var(--hint); color: var(--hint);">⚙️ Настройки</button>
     </div>
@@ -378,6 +389,7 @@
         <h3 style="font-size: 16px; margin-top: 10px;">Список привычек</h3>
         <div id="settings-list-container"></div>
         <div class="divider"></div>
+        <div id="storage-indicator-settings" class="storage-badge"></div>
         <button id="btn-back-to-tracker" class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;">← Назад к таймерам</button>
         <button id="btn-factory-reset" class="danger" style="margin-top: 20px;">⚠️ Сбросить всё</button>
     </div>
@@ -385,7 +397,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.5 (имя всегда из Telegram)');
+            console.log('🚀 Запуск трекера v9.6 (CloudSync + индикатор)');
 
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -399,7 +411,8 @@
                 document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
             }
 
-            const cloudAvailable = !!(tg?.CloudStorage && typeof tg.CloudStorage.getItem === 'function' && typeof tg.CloudStorage.setItem === 'function');
+            // Упрощённая проверка CloudStorage
+            const cloudAvailable = !!tg?.CloudStorage;
             console.log('CloudStorage доступен:', cloudAvailable);
 
             function isLocalStorageAvailable() {
@@ -413,10 +426,21 @@
             }
             const lsAvailable = isLocalStorageAvailable();
 
+            // Индикаторы хранения
+            const storageIndicatorTracker = document.getElementById('storage-indicator-tracker');
+            const storageIndicatorSettings = document.getElementById('storage-indicator-settings');
+
+            function updateStorageIndicator() {
+                const text = cloudAvailable ? '☁️ Облако' : '💾 Локально';
+                storageIndicatorTracker.textContent = text;
+                storageIndicatorSettings.textContent = text;
+            }
+
             async function loadData(key) {
                 if (cloudAvailable) {
                     try {
                         const result = await tg.CloudStorage.getItem(key);
+                        console.log(`📥 Загружено "${key}":`, result ? `${result.length} байт` : 'пусто');
                         return result ?? null;
                     } catch(e) {
                         console.warn('CloudStorage load error for', key, e);
@@ -428,15 +452,24 @@
             }
 
             async function saveData(key, value) {
+                console.log(`📤 Сохраняю "${key}": ${value.length} байт`);
                 if (cloudAvailable) {
                     try {
                         await tg.CloudStorage.setItem(key, value);
+                        console.log('✅ Облако сохранило');
                     } catch(e) {
-                        console.warn('CloudStorage save error for', key, e);
-                        if (lsAvailable) localStorage.setItem(key, value);
+                        console.error('❌ Ошибка сохранения в облако:', e);
+                        if (lsAvailable) {
+                            localStorage.setItem(key, value);
+                            console.log('💾 Запасное сохранение в localStorage');
+                        }
+                        alert('Не удалось сохранить данные в облако. Проверь свободное место или подключение.');
                     }
                 } else {
-                    if (lsAvailable) localStorage.setItem(key, value);
+                    if (lsAvailable) {
+                        localStorage.setItem(key, value);
+                        console.log('💾 Сохранено локально');
+                    }
                 }
             }
 
@@ -444,6 +477,7 @@
                 if (cloudAvailable) {
                     try {
                         await tg.CloudStorage.removeItem(key);
+                        console.log('🗑️ Удалено из облака:', key);
                     } catch(e) {
                         console.warn('CloudStorage remove error for', key, e);
                         if (lsAvailable) localStorage.removeItem(key);
@@ -505,6 +539,7 @@
                     if (name === 'setup' || name === 'settings') tg.BackButton.show();
                     else tg.BackButton.hide();
                 }
+                updateStorageIndicator();
             }
 
             function goToWelcome() {
@@ -936,13 +971,14 @@
             async function factoryReset() {
                 if (!confirm('⚠️ Ты уверен? Все привычки и прогресс будут удалены.')) return;
                 await removeData('habitsData');
+                if (lsAvailable) localStorage.removeItem('habitsData');
                 habits = [];
                 if (timerInterval) {
                     clearInterval(timerInterval);
                     timerInterval = null;
                 }
                 timerElements = [];
-                resolveUserName(); // обновим имя на всякий случай
+                resolveUserName();
                 goToWelcome();
             }
 
@@ -950,7 +986,8 @@
 
             // ========== Старт ==========
             async function init() {
-                resolveUserName(); // устанавливает userName и обновляет заголовок
+                resolveUserName();
+                updateStorageIndicator();
                 await loadApp();
 
                 if (timerInterval) clearInterval(timerInterval);
