@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Трекер привычек</title>
+    <!-- Подключаем шрифт Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg: #ffffff;
@@ -33,7 +38,8 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            /* Применяем шрифт Montserrat */
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
             padding: 16px;
@@ -46,55 +52,34 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* ======= АНИМАЦИИ ======= */
+        /* ======= БЕЗ АНИМАЦИЙ ======= */
         .screen {
             display: none;
             width: 100%;
             max-width: 400px;
             text-align: center;
             padding: 20px 0;
-            opacity: 0;
-            transform: translateY(15px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         .screen.active {
             display: block;
-            opacity: 1;
-            transform: translateY(0);
         }
 
         button:active {
-            transform: scale(0.95);
-            transition: transform 0.1s ease;
+            /* Лёгкое сжатие при нажатии (можно убрать, если мешает) */
+            transform: scale(0.98);
         }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .timer-pulse {
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            70% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .money-pop {
-            animation: pop 0.4s ease;
-        }
-        /* ======================== */
+        /* ============================ */
 
         h2 {
             font-size: 24px;
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
         p {
             font-size: 16px;
+            font-weight: 400;
             margin-bottom: 16px;
             color: var(--hint);
         }
@@ -106,6 +91,7 @@
             padding: 14px 20px;
             border-radius: 12px;
             font-size: 16px;
+            font-weight: 600;
             margin: 6px 0;
             cursor: pointer;
             width: 100%;
@@ -139,6 +125,7 @@
             max-width: 320px;
             margin: 8px 0;
             font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
         }
 
         label {
@@ -147,6 +134,7 @@
             max-width: 320px;
             margin: 12px auto 4px;
             font-size: 14px;
+            font-weight: 500;
             color: var(--hint);
         }
 
@@ -156,8 +144,6 @@
             margin: 20px 0;
             word-break: break-all;
             font-variant-numeric: tabular-nums;
-            font-family: 'SF Mono', 'Courier New', monospace;
-            transition: color 0.3s ease;
         }
 
         .saved {
@@ -220,7 +206,6 @@
             <button onclick="confirmCustom()">Далее</button>
         </div>
         <div class="divider"></div>
-        <!-- Кнопка настроек для смены имени -->
         <button class="outline" style="border-color: var(--hint); color: var(--hint);" onclick="showSettings()">⚙️ Настройки (сменить имя)</button>
     </div>
 
@@ -234,9 +219,11 @@
         <input type="datetime-local" id="last-use-datetime">
         
         <div id="cost-block" style="display:none;">
-            <label>Стоимость пачки / жижи (₽):</label>
-            <input type="number" id="cost-input" placeholder="Например 200" min="0" step="1">
-            <small>Считаем по 1 пачке в день</small>
+            <label>Сигарет в день (шт):</label>
+            <input type="number" id="per-day-input" placeholder="Например 10" min="0" step="1">
+            
+            <label>Стоимость одной пачки (₽):</label>
+            <input type="number" id="pack-cost-input" placeholder="Например 200" min="0" step="1">
         </div>
         
         <button onclick="startTracking()">🚀 Начать отсчёт</button>
@@ -250,7 +237,10 @@
         <p class="habit-name" id="display-habit"></p>
         <div class="timer" id="timer">0д 0ч 0м 0с</div>
         <div class="saved" id="money-saved"></div>
+        
         <button onclick="resetAll()">🔄 Сбросить и начать заново</button>
+        <div class="divider"></div>
+        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="showSettings()">⚙️ Настройки (сменить имя)</button>
     </div>
 
     <!-- ЭКРАН 4: Настройки (Смена имени) -->
@@ -258,7 +248,7 @@
         <span class="icon">⚙️</span>
         <h2>Сменить имя</h2>
         <p>Введи новое имя, как я должен к тебе обращаться</p>
-        <input type="text" id="settings-name-input" placeholder="Новое имя..." maxlength="20" autocomplete="off">
+        <input type="text" id="settings-name-input" placeholder="Введи новое имя..." maxlength="20" autocomplete="off">
         <button onclick="saveSettingsName()">💾 Сохранить</button>
         <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад</button>
     </div>
@@ -294,7 +284,8 @@
         const habitLabel = document.getElementById('habit-label');
         const lastUseDatetime = document.getElementById('last-use-datetime');
         const costBlock = document.getElementById('cost-block');
-        const costInput = document.getElementById('cost-input');
+        const perDayInput = document.getElementById('per-day-input');
+        const packCostInput = document.getElementById('pack-cost-input');
         const displayHabit = document.getElementById('display-habit');
         const timerEl = document.getElementById('timer');
         const moneySavedEl = document.getElementById('money-saved');
@@ -315,15 +306,17 @@
             if (!val) return alert('Пожалуйста, введи своё имя!');
             
             userName = val;
-            localStorage.setItem('my_username', userName); // Запоминаем имя
+            localStorage.setItem('my_username', userName);
             welcomeTitle.textContent = 'Привет, ' + userName + '!';
             showScreen('welcome');
-            customBlock.style.display = 'none'; // Скрыть инпут привычки, если открыт
+            customBlock.style.display = 'none';
         }
 
-        // Перейти в настройки
+        // Перейти в настройки (очищаем поле, чтобы убрать автозаполнение браузера на ПК)
         function showSettings() {
-            settingsNameInput.value = localStorage.getItem('my_username') || 'Друг';
+            settingsNameInput.value = '';
+            settingsNameInput.placeholder = 'Введи новое имя...';
+            setTimeout(() => settingsNameInput.focus(), 100);
             showScreen('settings');
         }
 
@@ -335,7 +328,7 @@
             localStorage.setItem('my_username', val);
             userName = val;
             welcomeTitle.textContent = 'Привет, ' + userName + '!';
-            alert('Имя успешно изменено!');
+            alert('Имя успешно изменено на "' + val + '"!');
             goToWelcome();
         }
 
@@ -377,9 +370,11 @@
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             lastUseDatetime.value = now.toISOString().slice(0, 16);
-            if (currentHabit.type === 'cigarettes' || currentHabit.type === 'vape') {
+            
+            if (currentHabit.type === 'cigarettes') {
                 costBlock.style.display = 'block';
-                costInput.value = '';
+                perDayInput.value = '';
+                packCostInput.value = '';
             } else {
                 costBlock.style.display = 'none';
             }
@@ -392,9 +387,17 @@
             const startTime = new Date(dtValue).getTime();
             if (isNaN(startTime)) return alert('Неверная дата/время');
             if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
-            const cost = (costBlock.style.display !== 'none') ? parseFloat(costInput.value) || 0 : 0;
+            
+            let costPerDay = 0;
+            if (costBlock.style.display !== 'none') {
+                const perDay = parseFloat(perDayInput.value) || 0;
+                const packCost = parseFloat(packCostInput.value) || 0;
+                // Математика: (сигарет в день / 20) * стоимость пачки
+                costPerDay = (perDay / 20) * packCost;
+            }
+            
             currentHabit.startTime = startTime;
-            currentHabit.costPerDay = cost;
+            currentHabit.costPerDay = costPerDay;
             localStorage.setItem('habitData', JSON.stringify(currentHabit));
             displayHabit.textContent = currentHabit.icon + ' ' + currentHabit.name;
             showScreen('tracker');
@@ -413,16 +416,11 @@
             const seconds = totalSeconds % 60;
             
             timerEl.textContent = days + 'д ' + hours + 'ч ' + minutes + 'м ' + seconds + 'с';
-            timerEl.classList.add('timer-pulse');
 
             if (currentHabit.costPerDay > 0) {
                 const daysPassed = diff / (1000 * 60 * 60 * 24);
                 const saved = daysPassed * currentHabit.costPerDay;
                 moneySavedEl.textContent = '💰 Сэкономлено: ' + Math.round(saved).toLocaleString('ru-RU') + ' ₽';
-                moneySavedEl.classList.remove('money-pop');
-                setTimeout(() => {
-                    moneySavedEl.classList.add('money-pop');
-                }, 10);
             } else {
                 moneySavedEl.textContent = '';
             }
@@ -447,7 +445,6 @@
             userName = savedName;
             welcomeTitle.textContent = 'Привет, ' + userName + '!';
             
-            // Если есть сохраненный прогресс
             if (savedData && savedData.startTime) {
                 currentHabit = savedData;
                 displayHabit.textContent = (currentHabit.icon || '🎯') + ' ' + currentHabit.name;
@@ -455,12 +452,10 @@
                 updateTimer();
                 timerInterval = setInterval(updateTimer, 1000);
             } else {
-                // Просто показываем главное меню, минуя экран ввода имени
                 showScreen('welcome');
                 customBlock.style.display = 'none';
             }
         } else {
-            // Если имя НЕ сохранено (первый запуск), показываем экран ввода
             showScreen('name');
             nameInput.focus();
         }
