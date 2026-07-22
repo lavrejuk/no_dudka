@@ -197,17 +197,17 @@
 </head>
 <body>
 
-    <!-- ЭКРАН 0: Ввод имени -->
-    <div id="screen-name" class="screen active">
+    <!-- ЭКРАН 0: Ввод имени (Только при первом входе) -->
+    <div id="screen-name" class="screen">
         <span class="icon">👋</span>
-        <h2>Как тебя зовут?</h2>
+        <h2>Привет, куряга, как тебя зовут?</h2>
         <p>Введи своё имя, чтобы я мог к тебе обращаться</p>
         <input type="text" id="name-input" placeholder="Введи имя..." maxlength="20" autocomplete="off">
         <button onclick="saveName()">✅ Продолжить</button>
     </div>
 
-    <!-- ЭКРАН 1: Выбор привычки -->
-    <div id="screen-welcome" class="screen">
+    <!-- ЭКРАН 1: Выбор привычки (Главный экран) -->
+    <div id="screen-welcome" class="screen active">
         <span class="icon">🔥</span>
         <h2 id="welcome-title">Привет!</h2>
         <p>Выбери привычку, от которой хочешь отказаться:</p>
@@ -219,6 +219,9 @@
             <input type="text" id="custom-input" placeholder="Введи свою привычку" maxlength="30">
             <button onclick="confirmCustom()">Далее</button>
         </div>
+        <div class="divider"></div>
+        <!-- Кнопка настроек для смены имени -->
+        <button class="outline" style="border-color: var(--hint); color: var(--hint);" onclick="showSettings()">⚙️ Настройки (сменить имя)</button>
     </div>
 
     <!-- ЭКРАН 2: Настройка даты/времени и стоимости -->
@@ -237,6 +240,7 @@
         </div>
         
         <button onclick="startTracking()">🚀 Начать отсчёт</button>
+        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад</button>
     </div>
 
     <!-- ЭКРАН 3: Основной экран трекинга -->
@@ -247,6 +251,16 @@
         <div class="timer" id="timer">0д 0ч 0м 0с</div>
         <div class="saved" id="money-saved"></div>
         <button onclick="resetAll()">🔄 Сбросить и начать заново</button>
+    </div>
+
+    <!-- ЭКРАН 4: Настройки (Смена имени) -->
+    <div id="screen-settings" class="screen">
+        <span class="icon">⚙️</span>
+        <h2>Сменить имя</h2>
+        <p>Введи новое имя, как я должен к тебе обращаться</p>
+        <input type="text" id="settings-name-input" placeholder="Новое имя..." maxlength="20" autocomplete="off">
+        <button onclick="saveSettingsName()">💾 Сохранить</button>
+        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад</button>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -266,11 +280,13 @@
 
         // ============ DOM элементы ============
         const nameInput = document.getElementById('name-input');
+        const settingsNameInput = document.getElementById('settings-name-input');
         const screens = {
             name: document.getElementById('screen-name'),
             welcome: document.getElementById('screen-welcome'),
             setup: document.getElementById('screen-setup'),
-            tracker: document.getElementById('screen-tracker')
+            tracker: document.getElementById('screen-tracker'),
+            settings: document.getElementById('screen-settings')
         };
         const welcomeTitle = document.getElementById('welcome-title');
         const customBlock = document.getElementById('custom-block');
@@ -293,6 +309,7 @@
             screens[name].classList.add('active');
         }
 
+        // Сохранить имя при первом запуске
         function saveName() {
             const val = nameInput.value.trim();
             if (!val) return alert('Пожалуйста, введи своё имя!');
@@ -301,6 +318,31 @@
             localStorage.setItem('my_username', userName); // Запоминаем имя
             welcomeTitle.textContent = 'Привет, ' + userName + '!';
             showScreen('welcome');
+            customBlock.style.display = 'none'; // Скрыть инпут привычки, если открыт
+        }
+
+        // Перейти в настройки
+        function showSettings() {
+            settingsNameInput.value = localStorage.getItem('my_username') || 'Друг';
+            showScreen('settings');
+        }
+
+        // Сохранить новое имя из настроек
+        function saveSettingsName() {
+            const val = settingsNameInput.value.trim();
+            if (!val) return alert('Имя не может быть пустым!');
+            
+            localStorage.setItem('my_username', val);
+            userName = val;
+            welcomeTitle.textContent = 'Привет, ' + userName + '!';
+            alert('Имя успешно изменено!');
+            goToWelcome();
+        }
+
+        // Вернуться на главную
+        function goToWelcome() {
+            showScreen('welcome');
+            customBlock.style.display = 'none';
         }
 
         function getHabitName(type) {
@@ -391,7 +433,7 @@
                 if (timerInterval) clearInterval(timerInterval);
                 localStorage.removeItem('habitData');
                 currentHabit = null;
-                showScreen('welcome');
+                goToWelcome();
                 customBlock.style.display = 'none';
                 customInput.value = '';
             }
@@ -405,6 +447,7 @@
             userName = savedName;
             welcomeTitle.textContent = 'Привет, ' + userName + '!';
             
+            // Если есть сохраненный прогресс
             if (savedData && savedData.startTime) {
                 currentHabit = savedData;
                 displayHabit.textContent = (currentHabit.icon || '🎯') + ' ' + currentHabit.name;
@@ -412,10 +455,12 @@
                 updateTimer();
                 timerInterval = setInterval(updateTimer, 1000);
             } else {
+                // Просто показываем главное меню, минуя экран ввода имени
                 showScreen('welcome');
+                customBlock.style.display = 'none';
             }
         } else {
-            // Если имя не сохранено, показываем экран ввода имени
+            // Если имя НЕ сохранено (первый запуск), показываем экран ввода
             showScreen('name');
             nameInput.focus();
         }
