@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.4</title>
+    <title>Трекер привычек v9.5</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -385,7 +385,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.4 (автоимя + сброс до заводских)');
+            console.log('🚀 Запуск трекера v9.5 (имя всегда из Telegram)');
 
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -533,27 +533,16 @@
                 });
             }
 
-            // ========== Имя пользователя ==========
-            function getUserNameFromTelegram() {
+            // ========== Имя пользователя (всегда из Telegram) ==========
+            function resolveUserName() {
                 if (tg?.initDataUnsafe?.user) {
-                    return tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username || 'Друг';
-                }
-                return null;
-            }
-
-            async function resolveUserName() {
-                const tgName = getUserNameFromTelegram();
-                if (tgName) {
-                    userName = tgName;
-                    await saveData('my_username', userName);
-                    return;
-                }
-                const saved = await loadData('my_username');
-                if (saved && typeof saved === 'string' && saved.trim() !== '' && saved !== '[object Object]') {
-                    userName = saved.trim();
+                    userName = tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username || 'Друг';
+                    console.log('Имя из Telegram:', userName);
                 } else {
                     userName = 'Друг';
+                    console.log('Нет данных Telegram, используется "Друг"');
                 }
+                welcomeTitle.textContent = 'Привет, ' + userName + '!';
             }
 
             // ========== Эмодзи пикер ==========
@@ -945,21 +934,15 @@
 
             // ========== Сброс до заводских настроек ==========
             async function factoryReset() {
-                if (!confirm('⚠️ Ты уверен? Все данные (привычки, прогресс, имя) будут безвозвратно удалены. Приложение вернётся к первому экрану.')) return;
-                // Очищаем хранилище
+                if (!confirm('⚠️ Ты уверен? Все привычки и прогресс будут удалены.')) return;
                 await removeData('habitsData');
-                await removeData('my_username');
                 habits = [];
-                userName = 'Друг';
-                // Останавливаем таймер
                 if (timerInterval) {
                     clearInterval(timerInterval);
                     timerInterval = null;
                 }
                 timerElements = [];
-                // Возвращаемся на экран приветствия
-                await resolveUserName(); // переопределит имя заново
-                welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                resolveUserName(); // обновим имя на всякий случай
                 goToWelcome();
             }
 
@@ -967,8 +950,7 @@
 
             // ========== Старт ==========
             async function init() {
-                await resolveUserName();
-                welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                resolveUserName(); // устанавливает userName и обновляет заголовок
                 await loadApp();
 
                 if (timerInterval) clearInterval(timerInterval);
