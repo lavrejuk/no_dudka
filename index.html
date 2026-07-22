@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.6</title>
+    <title>Трекер привычек v9.7</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -397,7 +397,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.6 (CloudSync + индикатор)');
+            console.log('🚀 Запуск трекера v9.7 (исправлен сброс)');
 
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -411,7 +411,6 @@
                 document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
             }
 
-            // Упрощённая проверка CloudStorage
             const cloudAvailable = !!tg?.CloudStorage;
             console.log('CloudStorage доступен:', cloudAvailable);
 
@@ -426,7 +425,6 @@
             }
             const lsAvailable = isLocalStorageAvailable();
 
-            // Индикаторы хранения
             const storageIndicatorTracker = document.getElementById('storage-indicator-tracker');
             const storageIndicatorSettings = document.getElementById('storage-indicator-settings');
 
@@ -459,31 +457,32 @@
                         console.log('✅ Облако сохранило');
                     } catch(e) {
                         console.error('❌ Ошибка сохранения в облако:', e);
-                        if (lsAvailable) {
-                            localStorage.setItem(key, value);
-                            console.log('💾 Запасное сохранение в localStorage');
-                        }
+                        if (lsAvailable) localStorage.setItem(key, value);
                         alert('Не удалось сохранить данные в облако. Проверь свободное место или подключение.');
                     }
                 } else {
-                    if (lsAvailable) {
-                        localStorage.setItem(key, value);
-                        console.log('💾 Сохранено локально');
-                    }
+                    if (lsAvailable) localStorage.setItem(key, value);
                 }
             }
 
-            async function removeData(key) {
+            // Принудительная запись пустых привычек и очистка localStorage
+            async function clearAllData() {
+                const emptyData = '[]';
                 if (cloudAvailable) {
                     try {
-                        await tg.CloudStorage.removeItem(key);
-                        console.log('🗑️ Удалено из облака:', key);
+                        // Записываем пустой массив в облако
+                        await tg.CloudStorage.setItem('habitsData', emptyData);
+                        console.log('🗑️ Облако: habitsData установлено в []');
+                        // Также пытаемся удалить для совместимости
+                        await tg.CloudStorage.removeItem('habitsData');
                     } catch(e) {
-                        console.warn('CloudStorage remove error for', key, e);
-                        if (lsAvailable) localStorage.removeItem(key);
+                        console.warn('Ошибка очистки облака', e);
                     }
-                } else {
-                    if (lsAvailable) localStorage.removeItem(key);
+                }
+                // Очищаем localStorage в любом случае
+                if (lsAvailable) {
+                    localStorage.removeItem('habitsData');
+                    console.log('🗑️ localStorage: habitsData удалён');
                 }
             }
 
@@ -526,7 +525,6 @@
 
             const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
 
-            // ========== Экраны ==========
             function showScreen(name) {
                 [screenWelcome, screenSetup, screenTracker, screenSettings].forEach(s => s.classList.remove('active'));
                 switch(name) {
@@ -568,7 +566,6 @@
                 });
             }
 
-            // ========== Имя пользователя (всегда из Telegram) ==========
             function resolveUserName() {
                 if (tg?.initDataUnsafe?.user) {
                     userName = tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username || 'Друг';
@@ -580,7 +577,6 @@
                 welcomeTitle.textContent = 'Привет, ' + userName + '!';
             }
 
-            // ========== Эмодзи пикер ==========
             function renderEmojiPicker(selected = '🎯') {
                 selectedEmoji = selected;
                 emojiPicker.innerHTML = '';
@@ -967,19 +963,26 @@
                 }
             }
 
-            // ========== Сброс до заводских настроек ==========
+            // ========== Исправленный сброс ==========
             async function factoryReset() {
                 if (!confirm('⚠️ Ты уверен? Все привычки и прогресс будут удалены.')) return;
-                await removeData('habitsData');
-                if (lsAvailable) localStorage.removeItem('habitsData');
-                habits = [];
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
+                try {
+                    // Очищаем облачное хранилище + localStorage
+                    await clearAllData();
+                    // Обнуляем локальный массив
+                    habits = [];
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                    timerElements = [];
+                    // Перезагружаем страницу, чтобы гарантированно подтянуть чистые данные
+                    console.log('Сброс выполнен, перезагрузка...');
+                    location.reload();
+                } catch(e) {
+                    console.error('Ошибка при сбросе', e);
+                    alert('Не удалось сбросить данные');
                 }
-                timerElements = [];
-                resolveUserName();
-                goToWelcome();
             }
 
             btnFactoryReset.addEventListener('click', factoryReset);
