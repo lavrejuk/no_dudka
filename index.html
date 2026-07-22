@@ -197,10 +197,19 @@
 </head>
 <body>
 
-    <!-- Экран приветствия / выбора привычки -->
-    <div id="screen-welcome" class="screen active">
+    <!-- ЭКРАН 0: Ввод имени -->
+    <div id="screen-name" class="screen active">
         <span class="icon">👋</span>
-        <h2 id="welcome-title">Привет, </h2>
+        <h2>Как тебя зовут?</h2>
+        <p>Введи своё имя, чтобы я мог к тебе обращаться</p>
+        <input type="text" id="name-input" placeholder="Введи имя..." maxlength="20" autocomplete="off">
+        <button onclick="saveName()">✅ Продолжить</button>
+    </div>
+
+    <!-- ЭКРАН 1: Выбор привычки -->
+    <div id="screen-welcome" class="screen">
+        <span class="icon">🔥</span>
+        <h2 id="welcome-title">Привет!</h2>
         <p>Выбери привычку, от которой хочешь отказаться:</p>
         <button onclick="selectHabit('cigarettes')">🚬 Сигареты</button>
         <button onclick="selectHabit('vape')">💨 Вейп</button>
@@ -212,7 +221,7 @@
         </div>
     </div>
 
-    <!-- Экран настройки даты/времени и стоимости (для сигарет/вейпа) -->
+    <!-- ЭКРАН 2: Настройка даты/времени и стоимости -->
     <div id="screen-setup" class="screen">
         <span class="icon">⚙️</span>
         <h2>Настройка</h2>
@@ -224,13 +233,13 @@
         <div id="cost-block" style="display:none;">
             <label>Стоимость пачки / жижи (₽):</label>
             <input type="number" id="cost-input" placeholder="Например 200" min="0" step="1">
-            <small>Считаем по 1 пачке в день (позже доработаем)</small>
+            <small>Считаем по 1 пачке в день</small>
         </div>
         
         <button onclick="startTracking()">🚀 Начать отсчёт</button>
     </div>
 
-    <!-- Основной экран трекинга -->
+    <!-- ЭКРАН 3: Основной экран трекинга -->
     <div id="screen-tracker" class="screen">
         <span class="icon">💪</span>
         <h2>Ты держишься!</h2>
@@ -244,8 +253,6 @@
     <script>
         // ============ Инициализация Telegram ============
         const tg = window.Telegram?.WebApp;
-        let userName = "Друг";
-
         if (tg) {
             tg.ready();
             tg.expand();
@@ -255,28 +262,17 @@
             document.documentElement.style.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
             document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
             document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
-
-            // ПОЛУЧАЕМ И ВСТАВЛЯЕМ ИМЯ
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                if (user.first_name) {
-                    userName = user.first_name;
-                } else if (user.username) {
-                    userName = '@' + user.username;
-                }
-            }
-            const titleElement = document.getElementById('welcome-title');
-            if (titleElement) {
-                titleElement.textContent = 'Привет, ' + userName + '!';
-            }
         }
 
         // ============ DOM элементы ============
+        const nameInput = document.getElementById('name-input');
         const screens = {
+            name: document.getElementById('screen-name'),
             welcome: document.getElementById('screen-welcome'),
             setup: document.getElementById('screen-setup'),
             tracker: document.getElementById('screen-tracker')
         };
+        const welcomeTitle = document.getElementById('welcome-title');
         const customBlock = document.getElementById('custom-block');
         const customInput = document.getElementById('custom-input');
         const habitLabel = document.getElementById('habit-label');
@@ -289,11 +285,22 @@
 
         let currentHabit = null;
         let timerInterval = null;
+        let userName = "Друг";
 
         // ============ Функции ============
         function showScreen(name) {
             Object.values(screens).forEach(s => s.classList.remove('active'));
             screens[name].classList.add('active');
+        }
+
+        function saveName() {
+            const val = nameInput.value.trim();
+            if (!val) return alert('Пожалуйста, введи своё имя!');
+            
+            userName = val;
+            localStorage.setItem('my_username', userName); // Запоминаем имя
+            welcomeTitle.textContent = 'Привет, ' + userName + '!';
+            showScreen('welcome');
         }
 
         function getHabitName(type) {
@@ -364,14 +371,12 @@
             const seconds = totalSeconds % 60;
             
             timerEl.textContent = days + 'д ' + hours + 'ч ' + minutes + 'м ' + seconds + 'с';
-            timerEl.classList.add('timer-pulse'); // Включаем пульсацию таймера
+            timerEl.classList.add('timer-pulse');
 
             if (currentHabit.costPerDay > 0) {
                 const daysPassed = diff / (1000 * 60 * 60 * 24);
                 const saved = daysPassed * currentHabit.costPerDay;
                 moneySavedEl.textContent = '💰 Сэкономлено: ' + Math.round(saved).toLocaleString('ru-RU') + ' ₽';
-                
-                // Анимация всплытия денег
                 moneySavedEl.classList.remove('money-pop');
                 setTimeout(() => {
                     moneySavedEl.classList.add('money-pop');
@@ -393,15 +398,26 @@
         }
 
         // ============ Инициализация при загрузке ============
+        const savedName = localStorage.getItem('my_username');
         const savedData = JSON.parse(localStorage.getItem('habitData') || 'null');
-        if (savedData && savedData.startTime) {
-            currentHabit = savedData;
-            displayHabit.textContent = (currentHabit.icon || '🎯') + ' ' + currentHabit.name;
-            showScreen('tracker');
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
+
+        if (savedName) {
+            userName = savedName;
+            welcomeTitle.textContent = 'Привет, ' + userName + '!';
+            
+            if (savedData && savedData.startTime) {
+                currentHabit = savedData;
+                displayHabit.textContent = (currentHabit.icon || '🎯') + ' ' + currentHabit.name;
+                showScreen('tracker');
+                updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
+            } else {
+                showScreen('welcome');
+            }
         } else {
-            showScreen('welcome');
+            // Если имя не сохранено, показываем экран ввода имени
+            showScreen('name');
+            nameInput.focus();
         }
     </script>
 </body>
