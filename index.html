@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v8.2</title>
+    <title>Трекер привычек v9</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -54,7 +54,7 @@
             align-items: center;
             justify-content: flex-start;
             transition: background 0.3s, color 0.3s;
-            font-size: 14px; /* общий базовый размер уменьшен */
+            font-size: 14px;
         }
 
         .screen {
@@ -74,13 +74,13 @@
         }
 
         h2 {
-            font-size: 20px; /* было 24px */
+            font-size: 20px;
             font-weight: 700;
             margin-bottom: 8px;
         }
 
         p {
-            font-size: 14px; /* было 16px */
+            font-size: 14px;
             font-weight: 400;
             margin-bottom: 16px;
             color: var(--hint);
@@ -90,9 +90,9 @@
             background: var(--button);
             color: var(--button-text);
             border: none;
-            padding: 12px 18px; /* немного меньше */
+            padding: 12px 18px;
             border-radius: 12px;
-            font-size: 14px; /* было 16px */
+            font-size: 14px;
             font-weight: 600;
             margin: 6px 0;
             cursor: pointer;
@@ -136,13 +136,13 @@
             text-align: left;
             max-width: 320px;
             margin: 12px auto 4px;
-            font-size: 13px; /* было 14px */
+            font-size: 13px;
             font-weight: 500;
             color: var(--hint);
         }
 
         .timer {
-            font-size: 2em; /* было 2.5em */
+            font-size: 2em;
             font-weight: bold;
             margin: 10px 0;
             word-break: break-all;
@@ -150,13 +150,13 @@
         }
 
         .habit-name {
-            font-size: 1.1em; /* было 1.2em */
+            font-size: 1.1em;
             font-weight: 600;
             margin-bottom: 5px;
         }
 
         .icon {
-            font-size: 40px; /* было 48px */
+            font-size: 40px;
             display: block;
             margin-bottom: 10px;
         }
@@ -187,7 +187,7 @@
         }
 
         .habit-card .timer {
-            font-size: 1.8em; /* было 2em */
+            font-size: 1.8em;
         }
 
         .settings-list-item {
@@ -347,7 +347,6 @@
             <input type="text" id="setup-name-input" placeholder="Название" maxlength="30">
             <label>Выбери иконку:</label>
             <div class="emoji-picker" id="emoji-picker"></div>
-            <!-- Поле ввода эмодзи убрано, иконка сохраняется в переменную selectedEmoji -->
         </div>
         <label>Дата и время последнего использования:</label>
         <input type="datetime-local" id="last-use-datetime">
@@ -393,9 +392,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v8.2');
+            console.log('🚀 Запуск трекера v9 (CloudStorage)');
 
-            // Telegram
+            // Telegram WebApp
             const tg = window.Telegram?.WebApp;
             if (tg) {
                 tg.ready();
@@ -408,17 +407,53 @@
                 document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
             }
 
-            // Проверка localStorage
-            let storageAvailable = true;
-            try {
-                localStorage.setItem('test', 'test');
-                localStorage.removeItem('test');
-            } catch(e) {
-                storageAvailable = false;
-                console.warn('localStorage недоступен');
+            // Проверка доступности CloudStorage
+            const cloudAvailable = !!(tg?.CloudStorage);
+            console.log('CloudStorage доступен:', cloudAvailable);
+
+            // localStorage fallback
+            function isLocalStorageAvailable() {
+                try {
+                    localStorage.setItem('__test', '1');
+                    localStorage.removeItem('__test');
+                    return true;
+                } catch(e) {
+                    return false;
+                }
+            }
+            const lsAvailable = isLocalStorageAvailable();
+
+            // ========== Обёртки хранения ==========
+            async function loadData(key) {
+                if (cloudAvailable) {
+                    try {
+                        const result = await tg.CloudStorage.getItem(key);
+                        return result ?? null;
+                    } catch(e) {
+                        console.warn('CloudStorage load error for', key, e);
+                        // fallback to localStorage если облако недоступно
+                        return lsAvailable ? localStorage.getItem(key) : null;
+                    }
+                } else {
+                    return lsAvailable ? localStorage.getItem(key) : null;
+                }
             }
 
-            // DOM-элементы
+            async function saveData(key, value) {
+                if (cloudAvailable) {
+                    try {
+                        await tg.CloudStorage.setItem(key, value);
+                    } catch(e) {
+                        console.warn('CloudStorage save error for', key, e);
+                        // fallback
+                        if (lsAvailable) localStorage.setItem(key, value);
+                    }
+                } else {
+                    if (lsAvailable) localStorage.setItem(key, value);
+                }
+            }
+
+            // ========== DOM-элементы ==========
             const $ = (id) => document.getElementById(id);
             const screenName = $('screen-name');
             const screenWelcome = $('screen-welcome');
@@ -455,7 +490,7 @@
             let fromSettings = false;
             let editingHabitId = null;
             let pendingResetId = null;
-            let selectedEmoji = '🎯'; // текущая выбранная иконка в кастомном режиме
+            let selectedEmoji = '🎯';
 
             const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
 
@@ -486,7 +521,7 @@
 
             function goToTracker() {
                 renderHabits();
-                updateAllTimers(); // первый расчет экономии
+                updateAllTimers();
                 showScreen('tracker');
             }
 
@@ -507,13 +542,13 @@
             }
 
             // ========== Имя пользователя ==========
-            function saveName() {
+            async function saveName() {
                 const val = $('name-input').value.trim();
                 if (!val) return alert('Введи имя!');
                 userName = val;
-                if (storageAvailable) localStorage.setItem('my_username', userName);
+                await saveData('my_username', userName);
                 welcomeTitle.textContent = 'Привет, ' + userName + '!';
-                loadApp();
+                await loadApp();
             }
 
             // ========== Эмодзи пикер (без поля ввода) ==========
@@ -654,7 +689,7 @@
             }
 
             // ========== Сохранение привычки ==========
-            function saveHabitFromSetup() {
+            async function saveHabitFromSetup() {
                 const dtValue = lastUseDatetime.value;
                 if (!dtValue) return alert('Укажи дату и время');
                 let name, icon, costPerDay = 0;
@@ -694,7 +729,7 @@
                 } else {
                     habits.push(habitData);
                 }
-                saveHabits();
+                await saveHabits();
                 goToTracker();
             }
 
@@ -704,14 +739,14 @@
                 confirmModal.style.display = 'flex';
             }
 
-            confirmYes.addEventListener('click', () => {
+            confirmYes.addEventListener('click', async () => {
                 if (pendingResetId !== null) {
                     const habit = habits.find(h => h.id === pendingResetId);
                     if (habit) {
                         habit.startTime = Date.now();
-                        saveHabits();
+                        await saveHabits();
                         renderHabits();
-                        updateAllTimers(); // пересчитаем экономию после сброса
+                        updateAllTimers();
                     }
                     pendingResetId = null;
                 }
@@ -724,10 +759,10 @@
             });
 
             // ========== Удаление ==========
-            function deleteHabit(id) {
+            async function deleteHabit(id) {
                 if (!confirm('Точно удалить эту привычку?')) return;
                 habits = habits.filter(h => h.id !== id);
-                saveHabits();
+                await saveHabits();
                 renderSettingsList();
                 renderHabits();
                 updateAllTimers();
@@ -766,7 +801,6 @@
                 }
                 habitsContainer.innerHTML = '';
                 timerElements = [];
-                // totalMoney будем считать в updateAllTimers, здесь не нужно
 
                 habits.forEach(h => {
                     const diff = Math.max(0, Date.now() - h.startTime);
@@ -819,8 +853,10 @@
                     card.appendChild(resetBtn);
 
                     habitsContainer.appendChild(card);
-                    timerElements.push({ element: timerDiv, id: h.id, moneyDiv: null }); // moneyDiv можно добавить при желании, но пока не нужно
+                    timerElements.push({ element: timerDiv, id: h.id });
                 });
+
+                // totalMoney обновится в updateAllTimers
             }
 
             function renderSettingsList() {
@@ -851,14 +887,13 @@
                 });
             }
 
-            // ========== Открытие настроек ==========
             function showSettings() {
                 console.log('⚙️ showSettings вызвана');
                 renderSettingsList();
                 showScreen('settings');
             }
 
-            // ========== Обновление таймеров И ОБЩЕЙ ЭКОНОМИИ в реальном времени ==========
+            // ========== Обновление таймеров и общей экономии ==========
             function updateAllTimers() {
                 let totalSavings = 0;
                 timerElements.forEach(({ element, id }) => {
@@ -866,37 +901,77 @@
                     if (habit) {
                         const diff = Math.max(0, Date.now() - habit.startTime);
                         element.textContent = formatTimeDiff(diff);
-                        // считаем экономию
-                        const days = diff / 86400000; // миллисекунды в дни
+                        const days = diff / 86400000;
                         totalSavings += (habit.costPerDay || 0) * days;
                     }
                 });
-                // Обновляем общую сумму
                 if (totalMoneyEl) {
                     totalMoneyEl.textContent = totalSavings > 0 ? `Общая экономия: ≈ ${Math.round(totalSavings)} ₽` : '';
                 }
             }
 
-            function saveHabits() {
-                if (storageAvailable) localStorage.setItem('habitsData', JSON.stringify(habits));
+            // ========== Работа с данными (облако / localStorage) ==========
+            async function saveHabits() {
+                await saveData('habitsData', JSON.stringify(habits));
             }
 
-            function loadHabits() {
-                if (storageAvailable) {
-                    const data = localStorage.getItem('habitsData');
-                    habits = data ? JSON.parse(data) : [];
-                } else {
-                    habits = [];
+            async function loadHabits() {
+                const data = await loadData('habitsData');
+                habits = data ? JSON.parse(data) : [];
+            }
+
+            // ========== Миграция старых данных из localStorage в облако ==========
+            async function migrateIfNeeded() {
+                if (cloudAvailable && habits.length === 0 && lsAvailable) {
+                    const localData = localStorage.getItem('habitsData');
+                    if (localData) {
+                        try {
+                            habits = JSON.parse(localData);
+                            if (habits.length > 0) {
+                                await saveHabits(); // сохраняем в облако
+                                console.log('Данные мигрированы из localStorage в CloudStorage');
+                            }
+                        } catch(e) {}
+                    }
                 }
             }
 
-            function loadApp() {
-                loadHabits();
+            // ========== Инициализация приложения ==========
+            async function loadApp() {
+                await loadHabits();
+                await migrateIfNeeded();
                 if (habits.length > 0) {
                     goToTracker();
                 } else {
                     goToWelcome();
                 }
+            }
+
+            // ========== Старт ==========
+            async function init() {
+                const savedName = await loadData('my_username');
+                if (savedName) {
+                    userName = savedName;
+                    welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                    await loadApp();
+                } else {
+                    showScreen('name');
+                    $('name-input').focus();
+                }
+
+                // Таймер
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    if (screenTracker.classList.contains('active')) {
+                        updateAllTimers();
+                    }
+                }, 1000);
+
+                window.visualViewport?.addEventListener('resize', () => {
+                    document.body.style.height = window.visualViewport.height + 'px';
+                });
+
+                console.log('✅ Инициализация завершена');
             }
 
             // ========== Привязка кнопок ==========
@@ -910,30 +985,8 @@
             document.getElementById('btn-add-from-settings').addEventListener('click', openSetupFromSettings);
             document.getElementById('btn-back-to-tracker').addEventListener('click', goToTracker);
 
-            // ========== Старт ==========
-            const savedName = storageAvailable ? localStorage.getItem('my_username') : null;
-            if (savedName) {
-                userName = savedName;
-                welcomeTitle.textContent = 'Привет, ' + userName + '!';
-                loadApp();
-            } else {
-                showScreen('name');
-                $('name-input').focus();
-            }
-
-            // Таймер обновления
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (screenTracker.classList.contains('active')) {
-                    updateAllTimers(); // теперь обновляет и таймеры, и экономию
-                }
-            }, 1000);
-
-            window.visualViewport?.addEventListener('resize', () => {
-                document.body.style.height = window.visualViewport.height + 'px';
-            });
-
-            console.log('✅ Инициализация завершена');
+            // Запуск
+            init();
         })();
     </script>
 </body>
