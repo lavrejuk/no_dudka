@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.7</title>
+    <title>Трекер привычек v9.8</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -397,7 +397,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.7 (исправлен сброс)');
+            console.log('🚀 Запуск трекера v9.8 (стабильное сохранение + сброс)');
 
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -429,60 +429,65 @@
             const storageIndicatorSettings = document.getElementById('storage-indicator-settings');
 
             function updateStorageIndicator() {
-                const text = cloudAvailable ? '☁️ Облако' : '💾 Локально';
+                const text = cloudAvailable ? '☁️ Облако' : (lsAvailable ? '💾 Локально' : '⚠️ Нет хранилища');
                 storageIndicatorTracker.textContent = text;
                 storageIndicatorSettings.textContent = text;
             }
 
-            async function loadData(key) {
-                if (cloudAvailable) {
+            // Надёжное сохранение с повторными попытками
+            async function saveDataWithRetry(key, value, retries = 2) {
+                for (let i = 0; i <= retries; i++) {
                     try {
+                        if (cloudAvailable) {
+                            await tg.CloudStorage.setItem(key, value);
+                            console.log('✅ Облако сохранило', key, 'длина:', value.length);
+                            return true;
+                        } else if (lsAvailable) {
+                            localStorage.setItem(key, value);
+                            console.log('💾 Локально сохранено', key);
+                            return true;
+                        } else {
+                            throw new Error('Нет доступного хранилища');
+                        }
+                    } catch(e) {
+                        console.error(`❌ Попытка ${i+1}/${retries+1} не удалась:`, e);
+                        if (i === retries) {
+                            alert('Не удалось сохранить данные. Проверь подключение или свободное место.');
+                            return false;
+                        }
+                        // Ждём перед повтором
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+                }
+            }
+
+            async function loadData(key) {
+                try {
+                    if (cloudAvailable) {
                         const result = await tg.CloudStorage.getItem(key);
                         console.log(`📥 Загружено "${key}":`, result ? `${result.length} байт` : 'пусто');
                         return result ?? null;
-                    } catch(e) {
-                        console.warn('CloudStorage load error for', key, e);
-                        return lsAvailable ? localStorage.getItem(key) : null;
+                    } else if (lsAvailable) {
+                        return localStorage.getItem(key);
                     }
-                } else {
-                    return lsAvailable ? localStorage.getItem(key) : null;
+                } catch(e) {
+                    console.warn('Ошибка загрузки', key, e);
                 }
+                return null;
             }
 
-            async function saveData(key, value) {
-                console.log(`📤 Сохраняю "${key}": ${value.length} байт`);
-                if (cloudAvailable) {
-                    try {
-                        await tg.CloudStorage.setItem(key, value);
-                        console.log('✅ Облако сохранило');
-                    } catch(e) {
-                        console.error('❌ Ошибка сохранения в облако:', e);
-                        if (lsAvailable) localStorage.setItem(key, value);
-                        alert('Не удалось сохранить данные в облако. Проверь свободное место или подключение.');
+            async function removeData(key) {
+                try {
+                    if (cloudAvailable) {
+                        await tg.CloudStorage.removeItem(key);
+                        console.log('🗑️ Облако: удалён', key);
                     }
-                } else {
-                    if (lsAvailable) localStorage.setItem(key, value);
+                } catch(e) {
+                    console.warn('Ошибка удаления из облака', key, e);
                 }
-            }
-
-            // Принудительная запись пустых привычек и очистка localStorage
-            async function clearAllData() {
-                const emptyData = '[]';
-                if (cloudAvailable) {
-                    try {
-                        // Записываем пустой массив в облако
-                        await tg.CloudStorage.setItem('habitsData', emptyData);
-                        console.log('🗑️ Облако: habitsData установлено в []');
-                        // Также пытаемся удалить для совместимости
-                        await tg.CloudStorage.removeItem('habitsData');
-                    } catch(e) {
-                        console.warn('Ошибка очистки облака', e);
-                    }
-                }
-                // Очищаем localStorage в любом случае
                 if (lsAvailable) {
-                    localStorage.removeItem('habitsData');
-                    console.log('🗑️ localStorage: habitsData удалён');
+                    localStorage.removeItem(key);
+                    console.log('🗑️ localStorage: удалён', key);
                 }
             }
 
@@ -924,29 +929,32 @@
             }
 
             async function saveHabits() {
-                await saveData('habitsData', JSON.stringify(habits));
+                const json = JSON.stringify(habits);
+                return await saveDataWithRetry('habitsData', json);
             }
 
             async function loadHabits() {
                 const data = await loadData('habitsData');
                 try {
                     habits = data ? JSON.parse(data) : [];
+                    console.log('📊 Загружено привычек:', habits.length);
                 } catch(e) {
                     console.warn('Ошибка парсинга привычек, сброс');
                     habits = [];
-                    await saveHabits();
                 }
             }
 
+            // Миграция только если в облаке пусто, а в localStorage есть данные
             async function migrateIfNeeded() {
-                if (cloudAvailable && habits.length === 0 && lsAvailable) {
+                if (habits.length === 0 && lsAvailable) {
                     const localData = localStorage.getItem('habitsData');
                     if (localData) {
                         try {
-                            habits = JSON.parse(localData);
-                            if (habits.length > 0) {
-                                await saveHabits();
-                                console.log('Данные мигрированы из localStorage в CloudStorage');
+                            const localHabits = JSON.parse(localData);
+                            if (localHabits.length > 0) {
+                                habits = localHabits;
+                                await saveHabits(); // сохраняем в облако
+                                console.log('🔄 Данные мигрированы из localStorage в облако');
                             }
                         } catch(e) {}
                     }
@@ -963,26 +971,21 @@
                 }
             }
 
-            // ========== Исправленный сброс ==========
+            // Сброс до заводских настроек (без перезагрузки)
             async function factoryReset() {
                 if (!confirm('⚠️ Ты уверен? Все привычки и прогресс будут удалены.')) return;
-                try {
-                    // Очищаем облачное хранилище + localStorage
-                    await clearAllData();
-                    // Обнуляем локальный массив
-                    habits = [];
-                    if (timerInterval) {
-                        clearInterval(timerInterval);
-                        timerInterval = null;
-                    }
-                    timerElements = [];
-                    // Перезагружаем страницу, чтобы гарантированно подтянуть чистые данные
-                    console.log('Сброс выполнен, перезагрузка...');
-                    location.reload();
-                } catch(e) {
-                    console.error('Ошибка при сбросе', e);
-                    alert('Не удалось сбросить данные');
+                // Очищаем облако и localStorage
+                await removeData('habitsData');
+                if (lsAvailable) localStorage.removeItem('habitsData');
+                habits = [];
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
                 }
+                timerElements = [];
+                // Показываем приветственный экран
+                goToWelcome();
+                console.log('Сброс выполнен, данные очищены');
             }
 
             btnFactoryReset.addEventListener('click', factoryReset);
