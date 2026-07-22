@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9</title>
+    <title>Трекер привычек v9.1</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -392,7 +392,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9 (CloudStorage)');
+            console.log('🚀 Запуск трекера v9.1 (CloudStorage + fix)');
 
             // Telegram WebApp
             const tg = window.Telegram?.WebApp;
@@ -431,7 +431,6 @@
                         return result ?? null;
                     } catch(e) {
                         console.warn('CloudStorage load error for', key, e);
-                        // fallback to localStorage если облако недоступно
                         return lsAvailable ? localStorage.getItem(key) : null;
                     }
                 } else {
@@ -445,7 +444,6 @@
                         await tg.CloudStorage.setItem(key, value);
                     } catch(e) {
                         console.warn('CloudStorage save error for', key, e);
-                        // fallback
                         if (lsAvailable) localStorage.setItem(key, value);
                     }
                 } else {
@@ -541,12 +539,13 @@
                 });
             }
 
-            // ========== Имя пользователя ==========
+            // ========== Имя пользователя (с защитой от мусора) ==========
             async function saveName() {
                 const val = $('name-input').value.trim();
                 if (!val) return alert('Введи имя!');
                 userName = val;
-                await saveData('my_username', userName);
+                // Явно приводим к строке для надёжности
+                await saveData('my_username', String(userName));
                 welcomeTitle.textContent = 'Привет, ' + userName + '!';
                 await loadApp();
             }
@@ -855,8 +854,6 @@
                     habitsContainer.appendChild(card);
                     timerElements.push({ element: timerDiv, id: h.id });
                 });
-
-                // totalMoney обновится в updateAllTimers
             }
 
             function renderSettingsList() {
@@ -928,7 +925,7 @@
                         try {
                             habits = JSON.parse(localData);
                             if (habits.length > 0) {
-                                await saveHabits(); // сохраняем в облако
+                                await saveHabits();
                                 console.log('Данные мигрированы из localStorage в CloudStorage');
                             }
                         } catch(e) {}
@@ -947,14 +944,17 @@
                 }
             }
 
-            // ========== Старт ==========
+            // ========== Старт с защитой от мусорного имени ==========
             async function init() {
                 const savedName = await loadData('my_username');
-                if (savedName) {
-                    userName = savedName;
+                // Проверка валидности имени
+                if (savedName && typeof savedName === 'string' && savedName.trim() !== '' && savedName !== '[object Object]') {
+                    userName = savedName.trim();
                     welcomeTitle.textContent = 'Привет, ' + userName + '!';
                     await loadApp();
                 } else {
+                    // Если имя испорчено или отсутствует – чистим хранилище и показываем экран ввода
+                    await saveData('my_username', '');
                     showScreen('name');
                     $('name-input').focus();
                 }
