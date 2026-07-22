@@ -213,10 +213,12 @@
         <button onclick="resetAll()">🔄 Сбросить и начать заново</button>
     </div>
 
+    <!-- ============================================= -->
+    <!-- ПОДКЛЮЧЕНИЕ БИБЛИОТЕКИ И ВЕСЬ JS КОД НИЖЕ -->
+    <!-- ВАЖНО: ЗДЕСЬ БОЛЬШЕ НЕТ ОШИБКИ С ВЛОЖЕННЫМИ ТЕГАМИ -->
+    <!-- ============================================= -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // ============ Telegram Web App (Вставлено по вашей просьбе) ============
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
         // ============ Инициализация Telegram ============
         const tg = window.Telegram?.WebApp;
         if (tg) {
@@ -230,13 +232,6 @@
             document.documentElement.style.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
             document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
             document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
-            
-            // Если пользователь закрыл мини-апп, останавливаем таймер (чтобы не было ошибок)
-            tg.onEvent('viewportChanged', function() {
-                if (!tg.isExpanded && timerInterval) {
-                    // Можно поставить на паузу, но для счетчика это не критично
-                }
-            });
         }
 
         // ============ DOM элементы ============
