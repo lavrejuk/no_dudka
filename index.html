@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v7</title>
+    <title>Трекер привычек v8</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -262,9 +262,53 @@
         .emoji-option.selected {
             border-color: var(--button);
         }
+
+        /* Модальное окно */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 20px;
+            padding: 24px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-box p {
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .modal-box button {
+            margin: 6px;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Модальное окно подтверждения сброса -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <p>⚠️ Ты уверен?<br>Таймер обнулится.</p>
+            <button id="confirm-yes" class="danger">Да, уверен</button>
+            <button id="confirm-no" class="outline">Нет</button>
+        </div>
+    </div>
 
     <!-- ЭКРАН 0: Ввод имени -->
     <div id="screen-name" class="screen">
@@ -354,7 +398,7 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // ============ Инициализация Telegram ============
+        // ============ Telegram WebApp ============
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
@@ -367,7 +411,7 @@
             document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
         }
 
-        // ============ DOM элементы ============
+        // ============ DOM ============
         const nameInput = document.getElementById('name-input');
         const screens = {
             name: document.getElementById('screen-name'),
@@ -397,31 +441,32 @@
         const settingsListContainer = document.getElementById('settings-list-container');
         const setupSaveBtn = document.getElementById('setup-save-btn');
         const totalMoneyEl = document.getElementById('total-money');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmYes = document.getElementById('confirm-yes');
+        const confirmNo = document.getElementById('confirm-no');
 
         let habits = [];
         let timerInterval = null;
-        let timerElements = []; // массив ссылок на элементы таймеров и их id
+        let timerElements = [];
         let userName = "Друг";
-        let currentSetupHabit = null; // объект привычки для редактирования или null для создания
-        let fromSettings = false; // откуда пришли
-        let editingHabitId = null; // id редактируемой привычки
+        let currentSetupHabit = null;
+        let fromSettings = false;
+        let editingHabitId = null;
+        let pendingResetId = null; // для модального окна
 
-        // Предустановленные эмодзи
         const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
 
-        // ============ Функции управления экранами ============
+        // ============ Управление экранами ============
         function showScreen(name) {
             Object.values(screens).forEach(s => s.classList.remove('active'));
             screens[name].classList.add('active');
-            manageBackButton(name);
-        }
-
-        function manageBackButton(screenName) {
-            if (!tg || !tg.BackButton) return;
-            if (screenName === 'setup' || screenName === 'settings') {
-                tg.BackButton.show();
-            } else {
-                tg.BackButton.hide();
+            // Telegram BackButton
+            if (tg?.BackButton) {
+                if (name === 'setup' || name === 'settings') {
+                    tg.BackButton.show();
+                } else {
+                    tg.BackButton.hide();
+                }
             }
         }
 
@@ -436,11 +481,10 @@
             showScreen('tracker');
         }
 
-        // ============ Обработка BackButton Telegram ============
-        if (tg && tg.BackButton) {
+        // ============ BackButton Telegram (на случай, если нужно переопределить onClick) ============
+        if (tg?.BackButton) {
             tg.BackButton.onClick(() => {
                 if (screens.setup.classList.contains('active')) {
-                    // Возвращаемся туда, откуда пришли
                     if (fromSettings) {
                         showScreen('settings');
                         renderSettingsList();
@@ -453,7 +497,7 @@
             });
         }
 
-        // ============ Сохранение имени ============
+        // ============ Имя пользователя ============
         function saveName() {
             const val = nameInput.value.trim();
             if (!val) return alert('Пожалуйста, введи своё имя!');
@@ -463,7 +507,7 @@
             loadApp();
         }
 
-        // ============ Выбор эмодзи ============
+        // ============ Эмодзи пикер ============
         function renderEmojiPicker(selected = '') {
             emojiPicker.innerHTML = '';
             defaultEmojis.forEach(emoji => {
@@ -478,16 +522,11 @@
             });
         }
 
-        setupIconInput.addEventListener('input', () => {
-            const val = setupIconInput.value.trim();
-            if (val.length > 0) {
-                renderEmojiPicker(val);
-            } else {
-                renderEmojiPicker('');
-            }
+        setupIconInput?.addEventListener('input', () => {
+            renderEmojiPicker(setupIconInput.value.trim());
         });
 
-        // ============ Логика открытия экрана добавления / редактирования ============
+        // ============ Подготовка экрана добавления ============
         function setDefaultDateTime() {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -509,51 +548,42 @@
             vapeMonthlyCostInput.value = '';
             cigarettesCostFields.style.display = 'none';
             vapeCostFields.style.display = 'none';
-            costBlock.style.display = 'block'; // показываем универсальное поле
+            costBlock.style.display = 'block';
             habitLabel.style.display = 'none';
             setupCustomBlock.style.display = 'none';
             renderEmojiPicker('');
         }
 
-        // Открытие из главного меню
         function selectHabit(type) {
             fromSettings = false;
             editingHabitId = null;
             const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
             const icons = { cigarettes: '🚬', vape: '💨' };
             
-            currentSetupHabit = { 
-                type: type, 
-                name: names[type] || type, 
-                icon: icons[type] || '🎯' 
-            };
+            currentSetupHabit = { type, name: names[type] || type, icon: icons[type] || '🎯' };
 
             document.getElementById('setup-title').textContent = 'Добавление';
             clearSetupFields();
 
             if (type === 'cigarettes') {
                 cigarettesCostFields.style.display = 'block';
-                costBlock.style.display = 'none'; // скрываем общее поле, используем своё
+                costBlock.style.display = 'none';
             } else if (type === 'vape') {
                 vapeCostFields.style.display = 'block';
                 costBlock.style.display = 'none';
             } else {
-                // для custom из меню "Своя привычка" через confirmCustom мы потом вызовем другой путь
+                // custom обрабатывается отдельно через confirmCustom
+                return;
             }
 
-            if (type !== 'custom') {
-                habitLabel.style.display = 'block';
-                habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
-                setupCustomBlock.style.display = 'none';
-            }
-
+            habitLabel.style.display = 'block';
+            habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
             setupSaveBtn.textContent = '➕ Добавить привычку';
             setupBackBtn.onclick = () => goToWelcome();
             showScreen('setup');
             setDefaultDateTime();
         }
 
-        // Открытие из настроек (создание новой)
         function openSetupFromSettings() {
             fromSettings = true;
             editingHabitId = null;
@@ -562,7 +592,6 @@
             document.getElementById('setup-title').textContent = 'Новая привычка';
             clearSetupFields();
             setupCustomBlock.style.display = 'block';
-            habitLabel.style.display = 'none';
             costBlock.style.display = 'block';
             cigarettesCostFields.style.display = 'none';
             vapeCostFields.style.display = 'none';
@@ -573,16 +602,14 @@
             setDefaultDateTime();
         }
 
-        // Открытие для редактирования
         function openEditHabit(habit) {
             fromSettings = true;
             editingHabitId = habit.id;
-            currentSetupHabit = { ...habit }; // копия
+            currentSetupHabit = { ...habit };
 
             document.getElementById('setup-title').textContent = 'Редактирование';
             clearSetupFields();
             setupCustomBlock.style.display = 'block';
-            habitLabel.style.display = 'none';
             costBlock.style.display = 'block';
             cigarettesCostFields.style.display = 'none';
             vapeCostFields.style.display = 'none';
@@ -606,7 +633,6 @@
         function confirmCustom() {
             const val = customInput.value.trim();
             if (!val) return alert('Введи название привычки');
-            // Идём на экран добавления кастомной привычки
             fromSettings = false;
             editingHabitId = null;
             currentSetupHabit = { type: 'custom', name: val, icon: '🎯' };
@@ -627,31 +653,30 @@
             setDefaultDateTime();
         }
 
-        // ============ Сохранение (добавление / обновление) привычки ============
+        // ============ Сохранение привычки ============
         function saveHabitFromSetup() {
-            let name, icon, costPerDay = 0;
             const dtValue = lastUseDatetime.value;
             if (!dtValue) return alert('Укажи дату и время');
 
+            let name, icon, costPerDay = 0;
+
             if (editingHabitId) {
-                // Редактирование
                 name = setupNameInput.value.trim();
                 if (!name) return alert('Введи название');
                 icon = setupIconInput.value.trim() || '🎯';
                 costPerDay = parseFloat(dailyCostInput.value) || 0;
-            } else if (currentSetupHabit && currentSetupHabit.type === 'cigarettes') {
+            } else if (currentSetupHabit?.type === 'cigarettes') {
                 name = 'Сигареты';
                 icon = '🚬';
                 const perDay = parseFloat(cigPerDayInput.value) || 0;
                 const packCost = parseFloat(cigPackCostInput.value) || 0;
                 costPerDay = (perDay / 20) * packCost;
-            } else if (currentSetupHabit && currentSetupHabit.type === 'vape') {
+            } else if (currentSetupHabit?.type === 'vape') {
                 name = 'Вейп';
                 icon = '💨';
                 const monthly = parseFloat(vapeMonthlyCostInput.value) || 0;
                 costPerDay = monthly / 30;
             } else {
-                // Кастомная или из "Своя привычка"
                 name = setupNameInput.value.trim();
                 if (!name) return alert('Введи название привычки');
                 icon = setupIconInput.value.trim() || '🎯';
@@ -664,16 +689,16 @@
 
             const habitData = {
                 id: editingHabitId || Date.now(),
-                type: 'custom', // все храним как custom для единообразия
-                name: name,
-                icon: icon,
-                startTime: startTime,
-                costPerDay: costPerDay
+                type: 'custom',
+                name,
+                icon,
+                startTime,
+                costPerDay
             };
 
             if (editingHabitId) {
-                const index = habits.findIndex(h => h.id === editingHabitId);
-                if (index !== -1) habits[index] = habitData;
+                const idx = habits.findIndex(h => h.id === editingHabitId);
+                if (idx !== -1) habits[idx] = habitData;
             } else {
                 habits.push(habitData);
             }
@@ -682,16 +707,29 @@
             goToTracker();
         }
 
-        // ============ Сброс таймера (сорвался) ============
+        // ============ Сброс таймера с модальным окном ============
         function resetHabit(id) {
-            if (!confirm('Ты действительно сорвался? Таймер начнётся заново с текущего момента.')) return;
-            const habit = habits.find(h => h.id === id);
-            if (habit) {
-                habit.startTime = Date.now();
-                saveHabits();
-                renderHabits();
-            }
+            pendingResetId = id;
+            confirmModal.style.display = 'flex';
         }
+
+        confirmYes.addEventListener('click', () => {
+            if (pendingResetId !== null) {
+                const habit = habits.find(h => h.id === pendingResetId);
+                if (habit) {
+                    habit.startTime = Date.now();
+                    saveHabits();
+                    renderHabits();
+                }
+                pendingResetId = null;
+            }
+            confirmModal.style.display = 'none';
+        });
+
+        confirmNo.addEventListener('click', () => {
+            pendingResetId = null;
+            confirmModal.style.display = 'none';
+        });
 
         // ============ Удаление ============
         function deleteHabit(id) {
@@ -701,12 +739,12 @@
             renderSettingsList();
             renderHabits();
             if (habits.length === 0) {
-                if (timerInterval) clearInterval(timerInterval);
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
         }
 
-        // ============ Рендеринг главного экрана (с таймерами, деньгами, достижениями) ============
+        // ============ Рендеринг трекера ============
         function formatTimeDiff(ms) {
             const totalSeconds = Math.floor(ms / 1000);
             const days = Math.floor(totalSeconds / 86400);
@@ -797,10 +835,10 @@
             totalMoneyEl.textContent = totalSavings > 0 ? `Общая экономия: ≈ ${Math.round(totalSavings)} ₽` : '';
         }
 
-        // ============ Рендеринг списка в настройках ============
+        // ============ Список в настройках ============
         function renderSettingsList() {
             if (habits.length === 0) {
-                settingsListContainer.innerHTML = '<p style="margin-top:10px; font-size:14px;">Список пуст.</p>';
+                settingsListContainer.innerHTML = '<p style="margin-top:10px;">Список пуст.</p>';
                 return;
             }
             settingsListContainer.innerHTML = '';
@@ -831,9 +869,13 @@
             });
         }
 
-        // ============ Обновление таймеров (используем кэш ссылок) ============
+        function showSettings() {
+            renderSettingsList();
+            showScreen('settings');
+        }
+
+        // ============ Обновление таймеров ============
         function updateAllTimers() {
-            if (!timerElements.length) return;
             timerElements.forEach(({ element, id }) => {
                 const habit = habits.find(h => h.id == id);
                 if (habit) {
@@ -843,7 +885,7 @@
             });
         }
 
-        // ============ Сохранение / загрузка данных ============
+        // ============ Сохранение / загрузка ============
         function saveHabits() {
             localStorage.setItem('habitsData', JSON.stringify(habits));
         }
@@ -862,7 +904,7 @@
             }
         }
 
-        // ============ Инициализация приложения ============
+        // ============ Старт ============
         const savedName = localStorage.getItem('my_username');
         if (savedName) {
             userName = savedName;
@@ -873,10 +915,8 @@
             nameInput.focus();
         }
 
-        // Привязываем обработчик сохранения
         setupSaveBtn.addEventListener('click', saveHabitFromSetup);
 
-        // Запускаем таймер
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
             if (screens.tracker.classList.contains('active')) {
@@ -884,12 +924,10 @@
             }
         }, 1000);
 
-        // Обработка клавиатуры (для мобильных)
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                document.body.style.height = window.visualViewport.height + 'px';
-            });
-        }
+        // visualViewport
+        window.visualViewport?.addEventListener('resize', () => {
+            document.body.style.height = window.visualViewport.height + 'px';
+        });
     </script>
 </body>
 </html>
