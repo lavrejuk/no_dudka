@@ -46,17 +46,47 @@
             transition: background 0.3s, color 0.3s;
         }
 
+        /* ======= АНИМАЦИИ ======= */
         .screen {
             display: none;
             width: 100%;
             max-width: 400px;
             text-align: center;
             padding: 20px 0;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         .screen.active {
             display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
+
+        button:active {
+            transform: scale(0.95);
+            transition: transform 0.1s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .timer-pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .money-pop {
+            animation: pop 0.4s ease;
+        }
+        /* ======================== */
 
         h2 {
             font-size: 24px;
@@ -127,6 +157,7 @@
             word-break: break-all;
             font-variant-numeric: tabular-nums;
             font-family: 'SF Mono', 'Courier New', monospace;
+            transition: color 0.3s ease;
         }
 
         .saved {
@@ -169,7 +200,7 @@
     <!-- Экран приветствия / выбора привычки -->
     <div id="screen-welcome" class="screen active">
         <span class="icon">👋</span>
-        <h2>Привет!</h2>
+        <h2 id="welcome-title">Привет, </h2>
         <p>Выбери привычку, от которой хочешь отказаться:</p>
         <button onclick="selectHabit('cigarettes')">🚬 Сигареты</button>
         <button onclick="selectHabit('vape')">💨 Вейп</button>
@@ -210,20 +241,14 @@
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- ВЕСЬ JS КОД ЗАПИСАН КАК ОБЫЧНЫЙ ТЕКСТ В ПЕРЕМЕННОЙ -->
     <script>
-        var jsCode = `
-         // ============ Инициализация Telegram ============
+        // ============ Инициализация Telegram ============
         const tg = window.Telegram?.WebApp;
-        let userName = "Друг"; // Значение по умолчанию, если не получится получить имя
-        let userNick = "";
+        let userName = "Друг";
 
         if (tg) {
             tg.ready();
             tg.expand();
-            
-            // Устанавливаем цвета Telegram
             document.documentElement.style.setProperty('--bg', tg.backgroundColor || '#ffffff');
             document.documentElement.style.setProperty('--text', tg.textColor || '#000000');
             document.documentElement.style.setProperty('--button', tg.buttonColor || '#3390ec');
@@ -231,16 +256,18 @@
             document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
             document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
 
-            // ============ ПОЛУЧАЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ============
+            // ПОЛУЧАЕМ И ВСТАВЛЯЕМ ИМЯ
             const user = tg.initDataUnsafe?.user;
             if (user) {
-                // Если есть имя, берем его. Если нет имени, берем никнейм (с @). Если нет ничего, оставляем "Друг"
                 if (user.first_name) {
                     userName = user.first_name;
                 } else if (user.username) {
                     userName = '@' + user.username;
                 }
-                userNick = user.username || '';
+            }
+            const titleElement = document.getElementById('welcome-title');
+            if (titleElement) {
+                titleElement.textContent = 'Привет, ' + userName + '!';
             }
         }
 
@@ -335,11 +362,20 @@
             const hours = Math.floor((totalSeconds % 86400) / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
+            
             timerEl.textContent = days + 'д ' + hours + 'ч ' + minutes + 'м ' + seconds + 'с';
+            timerEl.classList.add('timer-pulse'); // Включаем пульсацию таймера
+
             if (currentHabit.costPerDay > 0) {
                 const daysPassed = diff / (1000 * 60 * 60 * 24);
                 const saved = daysPassed * currentHabit.costPerDay;
                 moneySavedEl.textContent = '💰 Сэкономлено: ' + Math.round(saved).toLocaleString('ru-RU') + ' ₽';
+                
+                // Анимация всплытия денег
+                moneySavedEl.classList.remove('money-pop');
+                setTimeout(() => {
+                    moneySavedEl.classList.add('money-pop');
+                }, 10);
             } else {
                 moneySavedEl.textContent = '';
             }
@@ -356,7 +392,7 @@
             }
         }
 
-        // ============ Инициализация ============
+        // ============ Инициализация при загрузке ============
         const savedData = JSON.parse(localStorage.getItem('habitData') || 'null');
         if (savedData && savedData.startTime) {
             currentHabit = savedData;
@@ -367,10 +403,6 @@
         } else {
             showScreen('welcome');
         }
-        `;
-        
-        // Вставляем этот текст в страницу как исполняемый JS код
-        eval(jsCode);
     </script>
 </body>
 </html>
