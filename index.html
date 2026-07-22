@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.3</title>
+    <title>Трекер привычек v9.4</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -315,7 +315,7 @@
         </div>
     </div>
 
-    <!-- ЭКРАНЫ (без экрана ввода имени) -->
+    <!-- ЭКРАНЫ -->
     <div id="screen-welcome" class="screen active">
         <span class="icon">🔥</span>
         <h2 id="welcome-title">Привет!</h2>
@@ -379,12 +379,13 @@
         <div id="settings-list-container"></div>
         <div class="divider"></div>
         <button id="btn-back-to-tracker" class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;">← Назад к таймерам</button>
+        <button id="btn-factory-reset" class="danger" style="margin-top: 20px;">⚠️ Сбросить всё</button>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.3 (автоимя из Telegram)');
+            console.log('🚀 Запуск трекера v9.4 (автоимя + сброс до заводских)');
 
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -439,6 +440,19 @@
                 }
             }
 
+            async function removeData(key) {
+                if (cloudAvailable) {
+                    try {
+                        await tg.CloudStorage.removeItem(key);
+                    } catch(e) {
+                        console.warn('CloudStorage remove error for', key, e);
+                        if (lsAvailable) localStorage.removeItem(key);
+                    }
+                } else {
+                    if (lsAvailable) localStorage.removeItem(key);
+                }
+            }
+
             const $ = (id) => document.getElementById(id);
             const screenWelcome = $('screen-welcome');
             const screenSetup = $('screen-setup');
@@ -464,6 +478,7 @@
             const confirmNo = $('confirm-no');
             const setupSaveBtn = $('setup-save-btn');
             const setupBackBtn = $('setup-back-btn');
+            const btnFactoryReset = $('btn-factory-reset');
 
             let habits = [];
             let timerInterval = null;
@@ -527,14 +542,12 @@
             }
 
             async function resolveUserName() {
-                // Пытаемся взять имя из Telegram
                 const tgName = getUserNameFromTelegram();
                 if (tgName) {
                     userName = tgName;
                     await saveData('my_username', userName);
                     return;
                 }
-                // Если не в Telegram — грузим сохранённое
                 const saved = await loadData('my_username');
                 if (saved && typeof saved === 'string' && saved.trim() !== '' && saved !== '[object Object]') {
                     userName = saved.trim();
@@ -901,7 +914,7 @@
                 } catch(e) {
                     console.warn('Ошибка парсинга привычек, сброс');
                     habits = [];
-                    await saveHabits(); // перезапишем чистым
+                    await saveHabits();
                 }
             }
 
@@ -930,9 +943,30 @@
                 }
             }
 
+            // ========== Сброс до заводских настроек ==========
+            async function factoryReset() {
+                if (!confirm('⚠️ Ты уверен? Все данные (привычки, прогресс, имя) будут безвозвратно удалены. Приложение вернётся к первому экрану.')) return;
+                // Очищаем хранилище
+                await removeData('habitsData');
+                await removeData('my_username');
+                habits = [];
+                userName = 'Друг';
+                // Останавливаем таймер
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                timerElements = [];
+                // Возвращаемся на экран приветствия
+                await resolveUserName(); // переопределит имя заново
+                welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                goToWelcome();
+            }
+
+            btnFactoryReset.addEventListener('click', factoryReset);
+
             // ========== Старт ==========
             async function init() {
-                // Определяем имя пользователя
                 await resolveUserName();
                 welcomeTitle.textContent = 'Привет, ' + userName + '!';
                 await loadApp();
