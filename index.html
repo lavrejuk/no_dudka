@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v9.2</title>
+    <title>Трекер привычек v9.3</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -315,15 +315,7 @@
         </div>
     </div>
 
-    <!-- ЭКРАНЫ -->
-    <div id="screen-name" class="screen">
-        <span class="icon">👋</span>
-        <h2>Привет, куряга, как тебя зовут?</h2>
-        <p>Введи своё имя, чтобы я мог к тебе обращаться</p>
-        <input type="text" id="name-input" placeholder="Введи имя..." maxlength="20" autocomplete="off">
-        <button id="btn-save-name">✅ Продолжить</button>
-    </div>
-
+    <!-- ЭКРАНЫ (без экрана ввода имени) -->
     <div id="screen-welcome" class="screen active">
         <span class="icon">🔥</span>
         <h2 id="welcome-title">Привет!</h2>
@@ -392,9 +384,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v9.2 (исправлено сохранение имени)');
+            console.log('🚀 Запуск трекера v9.3 (автоимя из Telegram)');
 
-            // Telegram WebApp
             const tg = window.Telegram?.WebApp;
             if (tg) {
                 tg.ready();
@@ -407,11 +398,9 @@
                 document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
             }
 
-            // Проверка CloudStorage
             const cloudAvailable = !!(tg?.CloudStorage && typeof tg.CloudStorage.getItem === 'function' && typeof tg.CloudStorage.setItem === 'function');
             console.log('CloudStorage доступен:', cloudAvailable);
 
-            // localStorage fallback
             function isLocalStorageAvailable() {
                 try {
                     localStorage.setItem('__test', '1');
@@ -423,7 +412,6 @@
             }
             const lsAvailable = isLocalStorageAvailable();
 
-            // ========== Обёртки хранения ==========
             async function loadData(key) {
                 if (cloudAvailable) {
                     try {
@@ -451,9 +439,7 @@
                 }
             }
 
-            // ========== DOM-элементы ==========
             const $ = (id) => document.getElementById(id);
-            const screenName = $('screen-name');
             const screenWelcome = $('screen-welcome');
             const screenSetup = $('screen-setup');
             const screenTracker = $('screen-tracker');
@@ -479,7 +465,6 @@
             const setupSaveBtn = $('setup-save-btn');
             const setupBackBtn = $('setup-back-btn');
 
-            // Состояние
             let habits = [];
             let timerInterval = null;
             let timerElements = [];
@@ -492,23 +477,18 @@
 
             const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
 
-            // ========== Функции экранов ==========
+            // ========== Экраны ==========
             function showScreen(name) {
-                console.log('👉 showScreen:', name);
-                [screenName, screenWelcome, screenSetup, screenTracker, screenSettings].forEach(s => s.classList.remove('active'));
+                [screenWelcome, screenSetup, screenTracker, screenSettings].forEach(s => s.classList.remove('active'));
                 switch(name) {
-                    case 'name': screenName.classList.add('active'); break;
                     case 'welcome': screenWelcome.classList.add('active'); break;
                     case 'setup': screenSetup.classList.add('active'); break;
                     case 'tracker': screenTracker.classList.add('active'); break;
                     case 'settings': screenSettings.classList.add('active'); break;
                 }
                 if (tg?.BackButton) {
-                    if (name === 'setup' || name === 'settings') {
-                        tg.BackButton.show();
-                    } else {
-                        tg.BackButton.hide();
-                    }
+                    if (name === 'setup' || name === 'settings') tg.BackButton.show();
+                    else tg.BackButton.hide();
                 }
             }
 
@@ -523,7 +503,6 @@
                 showScreen('tracker');
             }
 
-            // ========== BackButton Telegram ==========
             if (tg?.BackButton) {
                 tg.BackButton.onClick(() => {
                     if (screenSetup.classList.contains('active')) {
@@ -539,24 +518,32 @@
                 });
             }
 
-            // ========== Имя пользователя (с обработкой ошибок) ==========
-            async function saveName() {
-                try {
-                    const val = $('name-input').value.trim();
-                    if (!val) return alert('Введи имя!');
-                    userName = val;
-                    console.log('Сохраняем имя:', userName);
-                    await saveData('my_username', String(userName));
-                    welcomeTitle.textContent = 'Привет, ' + userName + '!';
-                    console.log('Имя сохранено, загружаем приложение');
-                    await loadApp();
-                } catch(e) {
-                    console.error('Ошибка при сохранении имени:', e);
-                    alert('Не удалось сохранить имя. Попробуй ещё раз.');
+            // ========== Имя пользователя ==========
+            function getUserNameFromTelegram() {
+                if (tg?.initDataUnsafe?.user) {
+                    return tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username || 'Друг';
+                }
+                return null;
+            }
+
+            async function resolveUserName() {
+                // Пытаемся взять имя из Telegram
+                const tgName = getUserNameFromTelegram();
+                if (tgName) {
+                    userName = tgName;
+                    await saveData('my_username', userName);
+                    return;
+                }
+                // Если не в Telegram — грузим сохранённое
+                const saved = await loadData('my_username');
+                if (saved && typeof saved === 'string' && saved.trim() !== '' && saved !== '[object Object]') {
+                    userName = saved.trim();
+                } else {
+                    userName = 'Друг';
                 }
             }
 
-            // ========== Эмодзи пикер (без поля ввода) ==========
+            // ========== Эмодзи пикер ==========
             function renderEmojiPicker(selected = '🎯') {
                 selectedEmoji = selected;
                 emojiPicker.innerHTML = '';
@@ -572,7 +559,6 @@
                 });
             }
 
-            // ========== Подготовка экрана добавления ==========
             function setDefaultDateTime() {
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -601,7 +587,6 @@
             }
 
             function selectHabit(type) {
-                console.log('selectHabit', type);
                 fromSettings = false;
                 editingHabitId = null;
                 const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
@@ -630,7 +615,6 @@
             }
 
             function openSetupFromSettings() {
-                console.log('openSetupFromSettings');
                 fromSettings = true;
                 editingHabitId = null;
                 currentSetupHabit = null;
@@ -647,7 +631,6 @@
             }
 
             function openEditHabit(habit) {
-                console.log('openEditHabit', habit.name);
                 fromSettings = true;
                 editingHabitId = habit.id;
                 currentSetupHabit = { ...habit };
@@ -693,7 +676,6 @@
                 setDefaultDateTime();
             }
 
-            // ========== Сохранение привычки ==========
             async function saveHabitFromSetup() {
                 const dtValue = lastUseDatetime.value;
                 if (!dtValue) return alert('Укажи дату и время');
@@ -738,7 +720,6 @@
                 goToTracker();
             }
 
-            // ========== Сброс с модальным окном ==========
             function resetHabit(id) {
                 pendingResetId = id;
                 confirmModal.style.display = 'flex';
@@ -763,7 +744,6 @@
                 confirmModal.style.display = 'none';
             });
 
-            // ========== Удаление ==========
             async function deleteHabit(id) {
                 if (!confirm('Точно удалить эту привычку?')) return;
                 habits = habits.filter(h => h.id !== id);
@@ -777,7 +757,6 @@
                 }
             }
 
-            // ========== Рендеринг ==========
             function formatTimeDiff(ms) {
                 const totalSeconds = Math.floor(ms / 1000);
                 const days = Math.floor(totalSeconds / 86400);
@@ -891,12 +870,10 @@
             }
 
             function showSettings() {
-                console.log('⚙️ showSettings вызвана');
                 renderSettingsList();
                 showScreen('settings');
             }
 
-            // ========== Обновление таймеров и общей экономии ==========
             function updateAllTimers() {
                 let totalSavings = 0;
                 timerElements.forEach(({ element, id }) => {
@@ -913,17 +890,21 @@
                 }
             }
 
-            // ========== Работа с данными (облако / localStorage) ==========
             async function saveHabits() {
                 await saveData('habitsData', JSON.stringify(habits));
             }
 
             async function loadHabits() {
                 const data = await loadData('habitsData');
-                habits = data ? JSON.parse(data) : [];
+                try {
+                    habits = data ? JSON.parse(data) : [];
+                } catch(e) {
+                    console.warn('Ошибка парсинга привычек, сброс');
+                    habits = [];
+                    await saveHabits(); // перезапишем чистым
+                }
             }
 
-            // ========== Миграция старых данных из localStorage в облако ==========
             async function migrateIfNeeded() {
                 if (cloudAvailable && habits.length === 0 && lsAvailable) {
                     const localData = localStorage.getItem('habitsData');
@@ -939,7 +920,6 @@
                 }
             }
 
-            // ========== Инициализация приложения ==========
             async function loadApp() {
                 await loadHabits();
                 await migrateIfNeeded();
@@ -950,31 +930,13 @@
                 }
             }
 
-            // ========== Старт с защитой от мусорного имени ==========
+            // ========== Старт ==========
             async function init() {
-                try {
-                    const savedName = await loadData('my_username');
-                    console.log('Загруженное имя:', savedName);
-                    if (savedName && typeof savedName === 'string' && savedName.trim() !== '' && savedName !== '[object Object]') {
-                        userName = savedName.trim();
-                        welcomeTitle.textContent = 'Привет, ' + userName + '!';
-                        await loadApp();
-                    } else {
-                        // Имя повреждено или отсутствует – сбрасываем и показываем экран ввода
-                        if (savedName) {
-                            console.warn('Обнаружено мусорное имя, сброс:', savedName);
-                        }
-                        await saveData('my_username', '');
-                        showScreen('name');
-                        $('name-input').focus();
-                    }
-                } catch(e) {
-                    console.error('Ошибка инициализации:', e);
-                    showScreen('name');
-                    $('name-input').focus();
-                }
+                // Определяем имя пользователя
+                await resolveUserName();
+                welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                await loadApp();
 
-                // Таймер
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = setInterval(() => {
                     if (screenTracker.classList.contains('active')) {
@@ -986,11 +948,10 @@
                     document.body.style.height = window.visualViewport.height + 'px';
                 });
 
-                console.log('✅ Инициализация завершена');
+                console.log('✅ Инициализация завершена, пользователь:', userName);
             }
 
-            // ========== Привязка кнопок ==========
-            document.getElementById('btn-save-name').addEventListener('click', saveName);
+            // Привязка кнопок
             document.getElementById('btn-cigarettes').addEventListener('click', () => selectHabit('cigarettes'));
             document.getElementById('btn-vape').addEventListener('click', () => selectHabit('vape'));
             document.getElementById('btn-custom').addEventListener('click', showCustomInput);
@@ -1000,7 +961,6 @@
             document.getElementById('btn-add-from-settings').addEventListener('click', openSetupFromSettings);
             document.getElementById('btn-back-to-tracker').addEventListener('click', goToTracker);
 
-            // Запуск
             init();
         })();
     </script>
