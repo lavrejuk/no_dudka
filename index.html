@@ -16,6 +16,8 @@
             --success: #4caf50;
         }
 
+        /* Телеграм автоматически подставит свои цвета в data-theme, если использовать tg.setThemeParams() */
+        /* Но для надежности оставим и медиа-запросы */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg: #1e1e1e;
@@ -212,11 +214,29 @@
     </div>
 
     <script>
-        // ============ Telegram Web App ============
+        // ============ Telegram Web App (Вставлено по вашей просьбе) ============
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+        // ============ Инициализация Telegram ============
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
+            
+            // Чтобы ваши CSS переменные совпадали с темой Telegram
+            document.documentElement.style.setProperty('--bg', tg.backgroundColor || '#ffffff');
+            document.documentElement.style.setProperty('--text', tg.textColor || '#000000');
+            document.documentElement.style.setProperty('--button', tg.buttonColor || '#3390ec');
+            document.documentElement.style.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
+            document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
+            document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
+            
+            // Если пользователь закрыл мини-апп, останавливаем таймер (чтобы не было ошибок)
+            tg.onEvent('viewportChanged', function() {
+                if (!tg.isExpanded && timerInterval) {
+                    // Можно поставить на паузу, но для счетчика это не критично
+                }
+            });
         }
 
         // ============ DOM элементы ============
