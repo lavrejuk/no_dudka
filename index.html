@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Трекер привычек v5</title>
+    <title>Трекер привычек v6</title>
     
     <!-- Запрет кэширования для авто-обновления -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -246,12 +246,19 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 2: Настройка новой привычки (Название, Дата, Время, Стоимость) -->
+    <!-- ЭКРАН 2: Экран добавления привычки (Название, Дата, Время) -->
     <div id="screen-setup" class="screen">
         <span class="icon">⚙️</span>
-        <h2>Добавление</h2>
-        <p id="habit-label"></p>
+        <h2 id="setup-title">Добавление</h2>
         
+        <!-- Блок для стандартных привычек (Сигареты/Вейп) -->
+        <p id="habit-label" style="display: none;"></p>
+        
+        <!-- Блок для произвольных привычек -->
+        <div id="setup-custom-block" style="display: none;">
+            <input type="text" id="setup-name-input" placeholder="Введи название привычки" maxlength="30">
+        </div>
+
         <label>Дата и время последнего использования:</label>
         <input type="datetime-local" id="last-use-datetime">
         
@@ -271,8 +278,8 @@
             </div>
         </div>
         
-        <button onclick="addNewHabitFromSetup()">🚀 Добавить и начать отсчёт</button>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад к выбору</button>
+        <button id="setup-add-btn" onclick="addNewHabitFromSetup()">➕ Добавить привычку</button>
+        <button id="setup-back-btn" class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;">← Назад</button>
     </div>
 
     <!-- ЭКРАН 3: Главный экран со списком таймеров -->
@@ -285,16 +292,14 @@
         <button class="outline" style="border-color: var(--hint); color: var(--hint);" onclick="showSettings()">⚙️ Настройки</button>
     </div>
 
-    <!-- ЭКРАН 4: Настройки (Управление списком привычек + Добавление) -->
+    <!-- ЭКРАН 4: Настройки (Без полей ввода, только кнопка) -->
     <div id="screen-settings" class="screen">
         <span class="icon">⚙️</span>
         <h2>Настройки</h2>
         <p>Управление привычками</p>
         
-        <input type="text" id="settings-custom-input" placeholder="Название новой привычки..." maxlength="30">
-        <label style="margin-top: 8px;">Дата последнего использования:</label>
-        <input type="datetime-local" id="settings-last-date-input">
-        <button onclick="addNewHabitFromSettings()">➕ Добавить привычку</button>
+        <!-- Кнопка, которая открывает экран добавления -->
+        <button onclick="openSetupFromSettings()">➕ Добавить привычку</button>
         
         <div class="divider"></div>
         <h3 style="font-size: 18px; margin-top: 10px;">Список привычек</h3>
@@ -331,21 +336,23 @@
         const welcomeTitle = document.getElementById('welcome-title');
         const customBlock = document.getElementById('custom-block');
         const customInput = document.getElementById('custom-input');
+        const setupCustomBlock = document.getElementById('setup-custom-block');
+        const setupNameInput = document.getElementById('setup-name-input');
         const habitLabel = document.getElementById('habit-label');
+        const setupBackBtn = document.getElementById('setup-back-btn');
         const lastUseDatetime = document.getElementById('last-use-datetime');
         const costBlock = document.getElementById('cost-block');
         const cigPerDayInput = document.getElementById('cig-per-day-input');
         const cigPackCostInput = document.getElementById('cig-pack-cost-input');
         const vapeMonthlyCostInput = document.getElementById('vape-monthly-cost-input');
         const habitsContainer = document.getElementById('habits-container');
-        const settingsCustomInput = document.getElementById('settings-custom-input');
-        const settingsLastDateInput = document.getElementById('settings-last-date-input');
         const settingsListContainer = document.getElementById('settings-list-container');
 
         let habits = [];
         let timerInterval = null;
         let userName = "Друг";
         let currentSetupHabit = null;
+        let fromSettings = false; // Флаг: откуда пришли на экран добавления
 
         // ============ Функции управления экранами ============
         function showScreen(name) {
@@ -374,14 +381,16 @@
             loadApp();
         }
 
-        // ============ Логика привычек ============
+        // ============ Логика открытия экрана добавления ============
         function setDefaultDateTime() {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             lastUseDatetime.value = now.toISOString().slice(0, 16);
         }
 
+        // Открытие из главного меню (Сигареты, Вейп, Своя)
         function selectHabit(type) {
+            fromSettings = false;
             const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
             const icons = { cigarettes: '🚬', vape: '💨' };
             
@@ -390,9 +399,12 @@
                 name: names[type] || type, 
                 icon: icons[type] || '🎯' 
             };
+
+            document.getElementById('setup-title').textContent = 'Добавление';
+            habitLabel.style.display = 'block';
             habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
-            
-            // Показываем правильные поля для ввода стоимости
+            setupCustomBlock.style.display = 'none';
+
             if (currentSetupHabit.type === 'cigarettes') {
                 costBlock.style.display = 'block';
                 document.getElementById('cigarettes-cost-fields').style.display = 'block';
@@ -405,6 +417,23 @@
                 costBlock.style.display = 'none';
             }
 
+            setupBackBtn.onclick = goToWelcome;
+            showScreen('setup');
+            setDefaultDateTime();
+        }
+
+        // Открытие из настроек (Добавить привычку)
+        function openSetupFromSettings() {
+            fromSettings = true;
+            currentSetupHabit = { type: 'custom', name: 'Новая привычка', icon: '🎯' };
+            
+            document.getElementById('setup-title').textContent = 'Новая привычка';
+            habitLabel.style.display = 'none';
+            setupCustomBlock.style.display = 'block';
+            setupNameInput.value = '';
+            costBlock.style.display = 'none';
+
+            setupBackBtn.onclick = function() { showScreen('settings'); renderSettingsList(); };
             showScreen('setup');
             setDefaultDateTime();
         }
@@ -417,35 +446,45 @@
         function confirmCustom() {
             const val = customInput.value.trim();
             if (!val) return alert('Введи название привычки');
-            currentSetupHabit = { type: 'custom', name: val, icon: '🎯' };
-            habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
-            costBlock.style.display = 'none';
-            showScreen('setup');
-            setDefaultDateTime();
+            selectHabit('custom');
         }
 
+        // ============ Логика добавления привычек ============
         function addNewHabitFromSetup() {
+            let name = '';
+            let icon = '🎯';
+            let costPerDay = 0;
+
+            if (fromSettings) {
+                // Если пришли из настроек, берем название из инпута
+                name = setupNameInput.value.trim();
+                if (!name) return alert('Введи название привычки');
+            } else {
+                // Если пришли из меню, берем из currentSetupHabit
+                name = currentSetupHabit.name;
+                icon = currentSetupHabit.icon;
+
+                if (currentSetupHabit.type === 'cigarettes') {
+                    const perDay = parseFloat(cigPerDayInput.value) || 0;
+                    const packCost = parseFloat(cigPackCostInput.value) || 0;
+                    costPerDay = (perDay / 20) * packCost;
+                } else if (currentSetupHabit.type === 'vape') {
+                    const monthlyCost = parseFloat(vapeMonthlyCostInput.value) || 0;
+                    costPerDay = monthlyCost / 30;
+                }
+            }
+
             const dtValue = lastUseDatetime.value;
             if (!dtValue) return alert('Укажи дату и время последнего использования');
             const startTime = new Date(dtValue).getTime();
             if (isNaN(startTime)) return alert('Неверная дата/время');
             if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
 
-            let costPerDay = 0;
-            if (currentSetupHabit.type === 'cigarettes') {
-                const perDay = parseFloat(cigPerDayInput.value) || 0;
-                const packCost = parseFloat(cigPackCostInput.value) || 0;
-                costPerDay = (perDay / 20) * packCost;
-            } else if (currentSetupHabit.type === 'vape') {
-                const monthlyCost = parseFloat(vapeMonthlyCostInput.value) || 0;
-                costPerDay = monthlyCost / 30;
-            }
-
             const newHabit = {
                 id: Date.now(),
-                type: currentSetupHabit.type,
-                name: currentSetupHabit.name,
-                icon: currentSetupHabit.icon,
+                type: 'custom',
+                name: name,
+                icon: icon,
                 startTime: startTime,
                 costPerDay: costPerDay
             };
@@ -455,40 +494,10 @@
             goToTracker();
         }
 
+        // ============ Управление списком и настройки ============
         function showSettings() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            settingsLastDateInput.value = now.toISOString().slice(0, 16);
-            settingsCustomInput.value = '';
             renderSettingsList();
             showScreen('settings');
-        }
-
-        function addNewHabitFromSettings() {
-            const val = settingsCustomInput.value.trim();
-            if (!val) return alert('Введи название привычки');
-
-            const dtValue = settingsLastDateInput.value;
-            if (!dtValue) return alert('Укажи дату и время последнего использования');
-            const startTime = new Date(dtValue).getTime();
-            if (isNaN(startTime)) return alert('Неверная дата/время');
-            if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
-
-            const newHabit = {
-                id: Date.now(),
-                type: 'custom',
-                name: val,
-                icon: '🎯',
-                startTime: startTime,
-                costPerDay: 0
-            };
-
-            habits.push(newHabit);
-            saveHabits();
-            
-            settingsCustomInput.value = '';
-            renderSettingsList();
-            alert('Привычка "' + val + '" добавлена! Переходи к таймерам.');
         }
 
         function deleteHabit(id) {
