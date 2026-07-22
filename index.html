@@ -214,17 +214,34 @@
     <!-- ВЕСЬ JS КОД ЗАПИСАН КАК ОБЫЧНЫЙ ТЕКСТ В ПЕРЕМЕННОЙ -->
     <script>
         var jsCode = `
-        // ============ Инициализация Telegram ============
+         // ============ Инициализация Telegram ============
         const tg = window.Telegram?.WebApp;
+        let userName = "Друг"; // Значение по умолчанию, если не получится получить имя
+        let userNick = "";
+
         if (tg) {
             tg.ready();
             tg.expand();
+            
+            // Устанавливаем цвета Telegram
             document.documentElement.style.setProperty('--bg', tg.backgroundColor || '#ffffff');
             document.documentElement.style.setProperty('--text', tg.textColor || '#000000');
             document.documentElement.style.setProperty('--button', tg.buttonColor || '#3390ec');
             document.documentElement.style.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
             document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
             document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
+
+            // ============ ПОЛУЧАЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ============
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                // Если есть имя, берем его. Если нет имени, берем никнейм (с @). Если нет ничего, оставляем "Друг"
+                if (user.first_name) {
+                    userName = user.first_name;
+                } else if (user.username) {
+                    userName = '@' + user.username;
+                }
+                userNick = user.username || '';
+            }
         }
 
         // ============ DOM элементы ============
