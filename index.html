@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v8</title>
+    <title>Трекер привычек v8.1</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        /* ... весь CSS без изменений ... */
         :root {
             --bg: #ffffff;
             --text: #000000;
@@ -263,7 +264,6 @@
             border-color: var(--button);
         }
 
-        /* Модальное окно */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -301,7 +301,6 @@
 </head>
 <body>
 
-    <!-- Модальное окно подтверждения сброса -->
     <div id="confirm-modal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
             <p>⚠️ Ты уверен?<br>Таймер обнулится.</p>
@@ -310,37 +309,33 @@
         </div>
     </div>
 
-    <!-- ЭКРАН 0: Ввод имени -->
+    <!-- ЭКРАНЫ -->
     <div id="screen-name" class="screen">
         <span class="icon">👋</span>
         <h2>Привет, куряга, как тебя зовут?</h2>
         <p>Введи своё имя, чтобы я мог к тебе обращаться</p>
         <input type="text" id="name-input" placeholder="Введи имя..." maxlength="20" autocomplete="off">
-        <button onclick="saveName()">✅ Продолжить</button>
+        <button id="btn-save-name">✅ Продолжить</button>
     </div>
 
-    <!-- ЭКРАН 1: Выбор привычки -->
     <div id="screen-welcome" class="screen active">
         <span class="icon">🔥</span>
         <h2 id="welcome-title">Привет!</h2>
         <p>Выбери привычку, от которой хочешь отказаться:</p>
-        <button onclick="selectHabit('cigarettes')">🚬 Сигареты</button>
-        <button onclick="selectHabit('vape')">💨 Вейп</button>
+        <button id="btn-cigarettes">🚬 Сигареты</button>
+        <button id="btn-vape">💨 Вейп</button>
         <div class="divider"></div>
-        <button class="outline" onclick="showCustomInput()">✏️ Своя привычка</button>
+        <button id="btn-custom" class="outline">✏️ Своя привычка</button>
         <div id="custom-block" style="display:none;">
             <input type="text" id="custom-input" placeholder="Введи свою привычку" maxlength="30">
-            <button onclick="confirmCustom()">Далее</button>
+            <button id="btn-confirm-custom">Далее</button>
         </div>
     </div>
 
-    <!-- ЭКРАН 2: Добавление / Редактирование -->
     <div id="screen-setup" class="screen">
         <span class="icon">⚙️</span>
         <h2 id="setup-title">Добавление</h2>
-        
         <p id="habit-label" style="display: none;"></p>
-        
         <div id="setup-custom-block" style="display: none;">
             <label>Название привычки:</label>
             <input type="text" id="setup-name-input" placeholder="Название" maxlength="30">
@@ -348,586 +343,588 @@
             <input type="text" id="setup-icon-input" placeholder="Выбери или введи эмодзи" maxlength="2">
             <div class="emoji-picker" id="emoji-picker"></div>
         </div>
-
         <label>Дата и время последнего использования:</label>
         <input type="datetime-local" id="last-use-datetime">
-        
         <div id="cost-block">
             <label>Стоимость в день (₽):</label>
             <input type="number" id="daily-cost-input" placeholder="Сколько экономишь в день" min="0" step="0.01" value="0">
         </div>
-
         <div id="cigarettes-cost-fields" style="display:none;">
             <label>Сигарет в день (шт):</label>
             <input type="number" id="cig-per-day-input" placeholder="Например 10" min="0" step="1">
             <label>Стоимость одной пачки (₽):</label>
             <input type="number" id="cig-pack-cost-input" placeholder="Например 200" min="0" step="1">
         </div>
-
         <div id="vape-cost-fields" style="display:none;">
             <label>Сколько тратишь в месяц на вейп (₽):</label>
             <input type="number" id="vape-monthly-cost-input" placeholder="Например 2500" min="0" step="1">
         </div>
-        
         <button id="setup-save-btn">➕ Добавить привычку</button>
         <button id="setup-back-btn" class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;">← Назад</button>
     </div>
 
-    <!-- ЭКРАН 3: Главный трекер -->
     <div id="screen-tracker" class="screen">
         <span class="icon">💪</span>
         <h2 id="tracker-title">Твои привычки</h2>
         <div id="habits-container"></div>
         <div id="total-money" class="money" style="margin-top: 12px; font-weight: 600;"></div>
         <div class="divider"></div>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint);" onclick="showSettings()">⚙️ Настройки</button>
+        <button id="btn-open-settings" class="outline" style="border-color: var(--hint); color: var(--hint);">⚙️ Настройки</button>
     </div>
 
-    <!-- ЭКРАН 4: Настройки -->
     <div id="screen-settings" class="screen">
         <span class="icon">⚙️</span>
         <h2>Настройки</h2>
         <p>Управление привычками</p>
-        <button onclick="openSetupFromSettings()">➕ Добавить привычку</button>
+        <button id="btn-add-from-settings">➕ Добавить привычку</button>
         <div class="divider"></div>
         <h3 style="font-size: 18px; margin-top: 10px;">Список привычек</h3>
         <div id="settings-list-container"></div>
         <div class="divider"></div>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToTracker()">← Назад к таймерам</button>
+        <button id="btn-back-to-tracker" class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;">← Назад к таймерам</button>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // ============ Telegram WebApp ============
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-            document.documentElement.style.setProperty('--bg', tg.backgroundColor || '#ffffff');
-            document.documentElement.style.setProperty('--text', tg.textColor || '#000000');
-            document.documentElement.style.setProperty('--button', tg.buttonColor || '#3390ec');
-            document.documentElement.style.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
-            document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
-            document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
-        }
+        (function() {
+            console.log('🚀 Запуск трекера v8.1');
 
-        // ============ DOM ============
-        const nameInput = document.getElementById('name-input');
-        const screens = {
-            name: document.getElementById('screen-name'),
-            welcome: document.getElementById('screen-welcome'),
-            setup: document.getElementById('screen-setup'),
-            tracker: document.getElementById('screen-tracker'),
-            settings: document.getElementById('screen-settings')
-        };
-        const welcomeTitle = document.getElementById('welcome-title');
-        const customBlock = document.getElementById('custom-block');
-        const customInput = document.getElementById('custom-input');
-        const setupCustomBlock = document.getElementById('setup-custom-block');
-        const setupNameInput = document.getElementById('setup-name-input');
-        const setupIconInput = document.getElementById('setup-icon-input');
-        const emojiPicker = document.getElementById('emoji-picker');
-        const habitLabel = document.getElementById('habit-label');
-        const setupBackBtn = document.getElementById('setup-back-btn');
-        const lastUseDatetime = document.getElementById('last-use-datetime');
-        const costBlock = document.getElementById('cost-block');
-        const dailyCostInput = document.getElementById('daily-cost-input');
-        const cigPerDayInput = document.getElementById('cig-per-day-input');
-        const cigPackCostInput = document.getElementById('cig-pack-cost-input');
-        const vapeMonthlyCostInput = document.getElementById('vape-monthly-cost-input');
-        const cigarettesCostFields = document.getElementById('cigarettes-cost-fields');
-        const vapeCostFields = document.getElementById('vape-cost-fields');
-        const habitsContainer = document.getElementById('habits-container');
-        const settingsListContainer = document.getElementById('settings-list-container');
-        const setupSaveBtn = document.getElementById('setup-save-btn');
-        const totalMoneyEl = document.getElementById('total-money');
-        const confirmModal = document.getElementById('confirm-modal');
-        const confirmYes = document.getElementById('confirm-yes');
-        const confirmNo = document.getElementById('confirm-no');
-
-        let habits = [];
-        let timerInterval = null;
-        let timerElements = [];
-        let userName = "Друг";
-        let currentSetupHabit = null;
-        let fromSettings = false;
-        let editingHabitId = null;
-        let pendingResetId = null; // для модального окна
-
-        const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
-
-        // ============ Управление экранами ============
-        function showScreen(name) {
-            Object.values(screens).forEach(s => s.classList.remove('active'));
-            screens[name].classList.add('active');
-            // Telegram BackButton
-            if (tg?.BackButton) {
-                if (name === 'setup' || name === 'settings') {
-                    tg.BackButton.show();
-                } else {
-                    tg.BackButton.hide();
-                }
+            // Telegram
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                document.documentElement.style.setProperty('--bg', tg.backgroundColor || '#ffffff');
+                document.documentElement.style.setProperty('--text', tg.textColor || '#000000');
+                document.documentElement.style.setProperty('--button', tg.buttonColor || '#3390ec');
+                document.documentElement.style.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
+                document.documentElement.style.setProperty('--hint', tg.hintColor || '#999999');
+                document.documentElement.style.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
             }
-        }
 
-        function goToWelcome() {
-            showScreen('welcome');
-            customBlock.style.display = 'none';
-        }
+            // Проверка localStorage
+            let storageAvailable = true;
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+            } catch(e) {
+                storageAvailable = false;
+                console.warn('localStorage недоступен');
+            }
 
-        function goToTracker() {
-            renderHabits();
-            updateAllTimers();
-            showScreen('tracker');
-        }
+            // DOM-элементы
+            const $ = (id) => document.getElementById(id);
+            const screenName = $('screen-name');
+            const screenWelcome = $('screen-welcome');
+            const screenSetup = $('screen-setup');
+            const screenTracker = $('screen-tracker');
+            const screenSettings = $('screen-settings');
+            const welcomeTitle = $('welcome-title');
+            const customBlock = $('custom-block');
+            const customInput = $('custom-input');
+            const setupCustomBlock = $('setup-custom-block');
+            const setupNameInput = $('setup-name-input');
+            const setupIconInput = $('setup-icon-input');
+            const emojiPicker = $('emoji-picker');
+            const habitLabel = $('habit-label');
+            const lastUseDatetime = $('last-use-datetime');
+            const dailyCostInput = $('daily-cost-input');
+            const cigPerDayInput = $('cig-per-day-input');
+            const cigPackCostInput = $('cig-pack-cost-input');
+            const vapeMonthlyCostInput = $('vape-monthly-cost-input');
+            const habitsContainer = $('habits-container');
+            const settingsListContainer = $('settings-list-container');
+            const totalMoneyEl = $('total-money');
+            const confirmModal = $('confirm-modal');
+            const confirmYes = $('confirm-yes');
+            const confirmNo = $('confirm-no');
+            const setupSaveBtn = $('setup-save-btn');
+            const setupBackBtn = $('setup-back-btn');
 
-        // ============ BackButton Telegram (на случай, если нужно переопределить onClick) ============
-        if (tg?.BackButton) {
-            tg.BackButton.onClick(() => {
-                if (screens.setup.classList.contains('active')) {
-                    if (fromSettings) {
-                        showScreen('settings');
-                        renderSettingsList();
+            // Состояние
+            let habits = [];
+            let timerInterval = null;
+            let timerElements = [];
+            let userName = "Друг";
+            let currentSetupHabit = null;
+            let fromSettings = false;
+            let editingHabitId = null;
+            let pendingResetId = null;
+
+            const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
+
+            // ========== Функции экранов ==========
+            function showScreen(name) {
+                console.log('👉 showScreen:', name);
+                [screenName, screenWelcome, screenSetup, screenTracker, screenSettings].forEach(s => s.classList.remove('active'));
+                switch(name) {
+                    case 'name': screenName.classList.add('active'); break;
+                    case 'welcome': screenWelcome.classList.add('active'); break;
+                    case 'setup': screenSetup.classList.add('active'); break;
+                    case 'tracker': screenTracker.classList.add('active'); break;
+                    case 'settings': screenSettings.classList.add('active'); break;
+                }
+                // BackButton
+                if (tg?.BackButton) {
+                    if (name === 'setup' || name === 'settings') {
+                        tg.BackButton.show();
                     } else {
-                        goToWelcome();
+                        tg.BackButton.hide();
                     }
-                } else if (screens.settings.classList.contains('active')) {
-                    goToTracker();
                 }
-            });
-        }
-
-        // ============ Имя пользователя ============
-        function saveName() {
-            const val = nameInput.value.trim();
-            if (!val) return alert('Пожалуйста, введи своё имя!');
-            userName = val;
-            localStorage.setItem('my_username', userName);
-            welcomeTitle.textContent = 'Привет, ' + userName + '!';
-            loadApp();
-        }
-
-        // ============ Эмодзи пикер ============
-        function renderEmojiPicker(selected = '') {
-            emojiPicker.innerHTML = '';
-            defaultEmojis.forEach(emoji => {
-                const span = document.createElement('span');
-                span.className = 'emoji-option' + (emoji === selected ? ' selected' : '');
-                span.textContent = emoji;
-                span.addEventListener('click', () => {
-                    setupIconInput.value = emoji;
-                    renderEmojiPicker(emoji);
-                });
-                emojiPicker.appendChild(span);
-            });
-        }
-
-        setupIconInput?.addEventListener('input', () => {
-            renderEmojiPicker(setupIconInput.value.trim());
-        });
-
-        // ============ Подготовка экрана добавления ============
-        function setDefaultDateTime() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            lastUseDatetime.value = now.toISOString().slice(0, 16);
-        }
-
-        function fillDateTime(timestamp) {
-            const d = new Date(timestamp);
-            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-            lastUseDatetime.value = d.toISOString().slice(0, 16);
-        }
-
-        function clearSetupFields() {
-            setupNameInput.value = '';
-            setupIconInput.value = '';
-            dailyCostInput.value = '0';
-            cigPerDayInput.value = '';
-            cigPackCostInput.value = '';
-            vapeMonthlyCostInput.value = '';
-            cigarettesCostFields.style.display = 'none';
-            vapeCostFields.style.display = 'none';
-            costBlock.style.display = 'block';
-            habitLabel.style.display = 'none';
-            setupCustomBlock.style.display = 'none';
-            renderEmojiPicker('');
-        }
-
-        function selectHabit(type) {
-            fromSettings = false;
-            editingHabitId = null;
-            const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
-            const icons = { cigarettes: '🚬', vape: '💨' };
-            
-            currentSetupHabit = { type, name: names[type] || type, icon: icons[type] || '🎯' };
-
-            document.getElementById('setup-title').textContent = 'Добавление';
-            clearSetupFields();
-
-            if (type === 'cigarettes') {
-                cigarettesCostFields.style.display = 'block';
-                costBlock.style.display = 'none';
-            } else if (type === 'vape') {
-                vapeCostFields.style.display = 'block';
-                costBlock.style.display = 'none';
-            } else {
-                // custom обрабатывается отдельно через confirmCustom
-                return;
             }
 
-            habitLabel.style.display = 'block';
-            habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
-            setupSaveBtn.textContent = '➕ Добавить привычку';
-            setupBackBtn.onclick = () => goToWelcome();
-            showScreen('setup');
-            setDefaultDateTime();
-        }
-
-        function openSetupFromSettings() {
-            fromSettings = true;
-            editingHabitId = null;
-            currentSetupHabit = null;
-            
-            document.getElementById('setup-title').textContent = 'Новая привычка';
-            clearSetupFields();
-            setupCustomBlock.style.display = 'block';
-            costBlock.style.display = 'block';
-            cigarettesCostFields.style.display = 'none';
-            vapeCostFields.style.display = 'none';
-
-            setupSaveBtn.textContent = '➕ Добавить привычку';
-            setupBackBtn.onclick = () => { showScreen('settings'); renderSettingsList(); };
-            showScreen('setup');
-            setDefaultDateTime();
-        }
-
-        function openEditHabit(habit) {
-            fromSettings = true;
-            editingHabitId = habit.id;
-            currentSetupHabit = { ...habit };
-
-            document.getElementById('setup-title').textContent = 'Редактирование';
-            clearSetupFields();
-            setupCustomBlock.style.display = 'block';
-            costBlock.style.display = 'block';
-            cigarettesCostFields.style.display = 'none';
-            vapeCostFields.style.display = 'none';
-
-            setupNameInput.value = habit.name;
-            setupIconInput.value = habit.icon;
-            dailyCostInput.value = habit.costPerDay || 0;
-            fillDateTime(habit.startTime);
-            renderEmojiPicker(habit.icon);
-
-            setupSaveBtn.textContent = '💾 Сохранить';
-            setupBackBtn.onclick = () => { showScreen('settings'); renderSettingsList(); };
-            showScreen('setup');
-        }
-
-        function showCustomInput() {
-            customBlock.style.display = 'block';
-            customInput.focus();
-        }
-
-        function confirmCustom() {
-            const val = customInput.value.trim();
-            if (!val) return alert('Введи название привычки');
-            fromSettings = false;
-            editingHabitId = null;
-            currentSetupHabit = { type: 'custom', name: val, icon: '🎯' };
-            
-            document.getElementById('setup-title').textContent = 'Добавление';
-            clearSetupFields();
-            setupCustomBlock.style.display = 'block';
-            setupNameInput.value = val;
-            habitLabel.style.display = 'none';
-            costBlock.style.display = 'block';
-            cigarettesCostFields.style.display = 'none';
-            vapeCostFields.style.display = 'none';
-            renderEmojiPicker('🎯');
-
-            setupSaveBtn.textContent = '➕ Добавить привычку';
-            setupBackBtn.onclick = () => goToWelcome();
-            showScreen('setup');
-            setDefaultDateTime();
-        }
-
-        // ============ Сохранение привычки ============
-        function saveHabitFromSetup() {
-            const dtValue = lastUseDatetime.value;
-            if (!dtValue) return alert('Укажи дату и время');
-
-            let name, icon, costPerDay = 0;
-
-            if (editingHabitId) {
-                name = setupNameInput.value.trim();
-                if (!name) return alert('Введи название');
-                icon = setupIconInput.value.trim() || '🎯';
-                costPerDay = parseFloat(dailyCostInput.value) || 0;
-            } else if (currentSetupHabit?.type === 'cigarettes') {
-                name = 'Сигареты';
-                icon = '🚬';
-                const perDay = parseFloat(cigPerDayInput.value) || 0;
-                const packCost = parseFloat(cigPackCostInput.value) || 0;
-                costPerDay = (perDay / 20) * packCost;
-            } else if (currentSetupHabit?.type === 'vape') {
-                name = 'Вейп';
-                icon = '💨';
-                const monthly = parseFloat(vapeMonthlyCostInput.value) || 0;
-                costPerDay = monthly / 30;
-            } else {
-                name = setupNameInput.value.trim();
-                if (!name) return alert('Введи название привычки');
-                icon = setupIconInput.value.trim() || '🎯';
-                costPerDay = parseFloat(dailyCostInput.value) || 0;
+            function goToWelcome() {
+                showScreen('welcome');
+                customBlock.style.display = 'none';
             }
 
-            const startTime = new Date(dtValue).getTime();
-            if (isNaN(startTime)) return alert('Неверная дата/время');
-            if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
-
-            const habitData = {
-                id: editingHabitId || Date.now(),
-                type: 'custom',
-                name,
-                icon,
-                startTime,
-                costPerDay
-            };
-
-            if (editingHabitId) {
-                const idx = habits.findIndex(h => h.id === editingHabitId);
-                if (idx !== -1) habits[idx] = habitData;
-            } else {
-                habits.push(habitData);
-            }
-
-            saveHabits();
-            goToTracker();
-        }
-
-        // ============ Сброс таймера с модальным окном ============
-        function resetHabit(id) {
-            pendingResetId = id;
-            confirmModal.style.display = 'flex';
-        }
-
-        confirmYes.addEventListener('click', () => {
-            if (pendingResetId !== null) {
-                const habit = habits.find(h => h.id === pendingResetId);
-                if (habit) {
-                    habit.startTime = Date.now();
-                    saveHabits();
-                    renderHabits();
-                }
-                pendingResetId = null;
-            }
-            confirmModal.style.display = 'none';
-        });
-
-        confirmNo.addEventListener('click', () => {
-            pendingResetId = null;
-            confirmModal.style.display = 'none';
-        });
-
-        // ============ Удаление ============
-        function deleteHabit(id) {
-            if (!confirm('Точно удалить эту привычку?')) return;
-            habits = habits.filter(h => h.id !== id);
-            saveHabits();
-            renderSettingsList();
-            renderHabits();
-            if (habits.length === 0) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        }
-
-        // ============ Рендеринг трекера ============
-        function formatTimeDiff(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const days = Math.floor(totalSeconds / 86400);
-            const hours = Math.floor((totalSeconds % 86400) / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            return `${days}д ${hours}ч ${minutes}м ${seconds}с`;
-        }
-
-        function getAchievement(days) {
-            if (days >= 365) return '🏆 Год без!';
-            if (days >= 180) return '🎉 Полгода!';
-            if (days >= 90) return '💪 3 месяца!';
-            if (days >= 30) return '🌟 Месяц!';
-            if (days >= 7) return '🔥 Неделя!';
-            if (days >= 1) return '👍 1 день!';
-            return '';
-        }
-
-        function renderHabits() {
-            if (habits.length === 0) {
-                habitsContainer.innerHTML = '<p style="margin-top:20px;">У тебя пока нет привычек. Добавь их в настройках!</p>';
-                totalMoneyEl.textContent = '';
-                timerElements = [];
-                return;
-            }
-
-            habitsContainer.innerHTML = '';
-            timerElements = [];
-            let totalSavings = 0;
-
-            habits.forEach(h => {
-                const diff = Math.max(0, Date.now() - h.startTime);
-                const days = Math.floor(diff / 86400);
-                const moneySaved = (h.costPerDay || 0) * days;
-                totalSavings += moneySaved;
-                const achievement = getAchievement(days);
-
-                const card = document.createElement('div');
-                card.className = 'habit-card';
-
-                const iconDiv = document.createElement('div');
-                iconDiv.className = 'icon';
-                iconDiv.style.fontSize = '32px';
-                iconDiv.style.marginBottom = '5px';
-                iconDiv.textContent = h.icon;
-
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'habit-name';
-                nameDiv.textContent = h.name;
-
-                const timerDiv = document.createElement('div');
-                timerDiv.className = 'timer';
-                timerDiv.dataset.id = h.id;
-                timerDiv.textContent = formatTimeDiff(diff);
-
-                card.appendChild(iconDiv);
-                card.appendChild(nameDiv);
-                card.appendChild(timerDiv);
-
-                if (moneySaved > 0) {
-                    const moneyDiv = document.createElement('div');
-                    moneyDiv.className = 'money';
-                    moneyDiv.textContent = `💰 Сэкономлено ≈ ${Math.round(moneySaved)} ₽`;
-                    card.appendChild(moneyDiv);
-                }
-
-                if (achievement) {
-                    const achDiv = document.createElement('div');
-                    achDiv.className = 'achievement';
-                    achDiv.textContent = achievement;
-                    card.appendChild(achDiv);
-                }
-
-                const resetBtn = document.createElement('button');
-                resetBtn.className = 'reset-btn';
-                resetBtn.textContent = '😞 Я сорвался';
-                resetBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    resetHabit(h.id);
-                });
-                card.appendChild(resetBtn);
-
-                habitsContainer.appendChild(card);
-                timerElements.push({ element: timerDiv, id: h.id });
-            });
-
-            totalMoneyEl.textContent = totalSavings > 0 ? `Общая экономия: ≈ ${Math.round(totalSavings)} ₽` : '';
-        }
-
-        // ============ Список в настройках ============
-        function renderSettingsList() {
-            if (habits.length === 0) {
-                settingsListContainer.innerHTML = '<p style="margin-top:10px;">Список пуст.</p>';
-                return;
-            }
-            settingsListContainer.innerHTML = '';
-            habits.forEach(h => {
-                const item = document.createElement('div');
-                item.className = 'settings-list-item';
-
-                const span = document.createElement('span');
-                span.textContent = h.icon + ' ' + h.name;
-
-                const btnGroup = document.createElement('div');
-                btnGroup.className = 'btn-group';
-
-                const editBtn = document.createElement('button');
-                editBtn.textContent = '✏️';
-                editBtn.addEventListener('click', () => openEditHabit(h));
-
-                const delBtn = document.createElement('button');
-                delBtn.className = 'del-btn';
-                delBtn.textContent = 'Удалить';
-                delBtn.addEventListener('click', () => deleteHabit(h.id));
-
-                btnGroup.appendChild(editBtn);
-                btnGroup.appendChild(delBtn);
-                item.appendChild(span);
-                item.appendChild(btnGroup);
-                settingsListContainer.appendChild(item);
-            });
-        }
-
-        function showSettings() {
-            renderSettingsList();
-            showScreen('settings');
-        }
-
-        // ============ Обновление таймеров ============
-        function updateAllTimers() {
-            timerElements.forEach(({ element, id }) => {
-                const habit = habits.find(h => h.id == id);
-                if (habit) {
-                    const diff = Math.max(0, Date.now() - habit.startTime);
-                    element.textContent = formatTimeDiff(diff);
-                }
-            });
-        }
-
-        // ============ Сохранение / загрузка ============
-        function saveHabits() {
-            localStorage.setItem('habitsData', JSON.stringify(habits));
-        }
-
-        function loadHabits() {
-            const data = localStorage.getItem('habitsData');
-            habits = data ? JSON.parse(data) : [];
-        }
-
-        function loadApp() {
-            loadHabits();
-            if (habits.length > 0) {
-                goToTracker();
-            } else {
-                goToWelcome();
-            }
-        }
-
-        // ============ Старт ============
-        const savedName = localStorage.getItem('my_username');
-        if (savedName) {
-            userName = savedName;
-            welcomeTitle.textContent = 'Привет, ' + userName + '!';
-            loadApp();
-        } else {
-            showScreen('name');
-            nameInput.focus();
-        }
-
-        setupSaveBtn.addEventListener('click', saveHabitFromSetup);
-
-        if (timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if (screens.tracker.classList.contains('active')) {
+            function goToTracker() {
+                renderHabits();
                 updateAllTimers();
+                showScreen('tracker');
             }
-        }, 1000);
 
-        // visualViewport
-        window.visualViewport?.addEventListener('resize', () => {
-            document.body.style.height = window.visualViewport.height + 'px';
-        });
+            // ========== BackButton Telegram ==========
+            if (tg?.BackButton) {
+                tg.BackButton.onClick(() => {
+                    if (screenSetup.classList.contains('active')) {
+                        if (fromSettings) {
+                            showScreen('settings');
+                            renderSettingsList();
+                        } else {
+                            goToWelcome();
+                        }
+                    } else if (screenSettings.classList.contains('active')) {
+                        goToTracker();
+                    }
+                });
+            }
+
+            // ========== Имя пользователя ==========
+            function saveName() {
+                const val = $('name-input').value.trim();
+                if (!val) return alert('Введи имя!');
+                userName = val;
+                if (storageAvailable) localStorage.setItem('my_username', userName);
+                welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                loadApp();
+            }
+
+            // ========== Эмодзи пикер ==========
+            function renderEmojiPicker(selected = '') {
+                emojiPicker.innerHTML = '';
+                defaultEmojis.forEach(emoji => {
+                    const span = document.createElement('span');
+                    span.className = 'emoji-option' + (emoji === selected ? ' selected' : '');
+                    span.textContent = emoji;
+                    span.addEventListener('click', () => {
+                        setupIconInput.value = emoji;
+                        renderEmojiPicker(emoji);
+                    });
+                    emojiPicker.appendChild(span);
+                });
+            }
+
+            setupIconInput.addEventListener('input', () => {
+                renderEmojiPicker(setupIconInput.value.trim());
+            });
+
+            // ========== Подготовка экрана добавления ==========
+            function setDefaultDateTime() {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                lastUseDatetime.value = now.toISOString().slice(0, 16);
+            }
+
+            function fillDateTime(timestamp) {
+                const d = new Date(timestamp);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                lastUseDatetime.value = d.toISOString().slice(0, 16);
+            }
+
+            function clearSetupFields() {
+                setupNameInput.value = '';
+                setupIconInput.value = '';
+                dailyCostInput.value = '0';
+                cigPerDayInput.value = '';
+                cigPackCostInput.value = '';
+                vapeMonthlyCostInput.value = '';
+                $('cigarettes-cost-fields').style.display = 'none';
+                $('vape-cost-fields').style.display = 'none';
+                $('cost-block').style.display = 'block';
+                habitLabel.style.display = 'none';
+                setupCustomBlock.style.display = 'none';
+                renderEmojiPicker('');
+            }
+
+            function selectHabit(type) {
+                console.log('selectHabit', type);
+                fromSettings = false;
+                editingHabitId = null;
+                const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
+                const icons = { cigarettes: '🚬', vape: '💨' };
+                currentSetupHabit = { type, name: names[type] || type, icon: icons[type] || '🎯' };
+
+                $('setup-title').textContent = 'Добавление';
+                clearSetupFields();
+
+                if (type === 'cigarettes') {
+                    $('cigarettes-cost-fields').style.display = 'block';
+                    $('cost-block').style.display = 'none';
+                } else if (type === 'vape') {
+                    $('vape-cost-fields').style.display = 'block';
+                    $('cost-block').style.display = 'none';
+                }
+
+                if (type !== 'custom') {
+                    habitLabel.style.display = 'block';
+                    habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
+                }
+                setupSaveBtn.textContent = '➕ Добавить привычку';
+                setupBackBtn.onclick = () => goToWelcome();
+                showScreen('setup');
+                setDefaultDateTime();
+            }
+
+            function openSetupFromSettings() {
+                console.log('openSetupFromSettings');
+                fromSettings = true;
+                editingHabitId = null;
+                currentSetupHabit = null;
+                $('setup-title').textContent = 'Новая привычка';
+                clearSetupFields();
+                setupCustomBlock.style.display = 'block';
+                $('cost-block').style.display = 'block';
+                $('cigarettes-cost-fields').style.display = 'none';
+                $('vape-cost-fields').style.display = 'none';
+                setupSaveBtn.textContent = '➕ Добавить привычку';
+                setupBackBtn.onclick = () => { showScreen('settings'); renderSettingsList(); };
+                showScreen('setup');
+                setDefaultDateTime();
+            }
+
+            function openEditHabit(habit) {
+                console.log('openEditHabit', habit.name);
+                fromSettings = true;
+                editingHabitId = habit.id;
+                currentSetupHabit = { ...habit };
+                $('setup-title').textContent = 'Редактирование';
+                clearSetupFields();
+                setupCustomBlock.style.display = 'block';
+                $('cost-block').style.display = 'block';
+                $('cigarettes-cost-fields').style.display = 'none';
+                $('vape-cost-fields').style.display = 'none';
+                setupNameInput.value = habit.name;
+                setupIconInput.value = habit.icon;
+                dailyCostInput.value = habit.costPerDay || 0;
+                fillDateTime(habit.startTime);
+                renderEmojiPicker(habit.icon);
+                setupSaveBtn.textContent = '💾 Сохранить';
+                setupBackBtn.onclick = () => { showScreen('settings'); renderSettingsList(); };
+                showScreen('setup');
+            }
+
+            function showCustomInput() {
+                customBlock.style.display = 'block';
+                customInput.focus();
+            }
+
+            function confirmCustom() {
+                const val = customInput.value.trim();
+                if (!val) return alert('Введи название привычки');
+                fromSettings = false;
+                editingHabitId = null;
+                currentSetupHabit = { type: 'custom', name: val, icon: '🎯' };
+                $('setup-title').textContent = 'Добавление';
+                clearSetupFields();
+                setupCustomBlock.style.display = 'block';
+                setupNameInput.value = val;
+                $('cost-block').style.display = 'block';
+                $('cigarettes-cost-fields').style.display = 'none';
+                $('vape-cost-fields').style.display = 'none';
+                renderEmojiPicker('🎯');
+                setupSaveBtn.textContent = '➕ Добавить привычку';
+                setupBackBtn.onclick = () => goToWelcome();
+                showScreen('setup');
+                setDefaultDateTime();
+            }
+
+            // ========== Сохранение привычки ==========
+            function saveHabitFromSetup() {
+                const dtValue = lastUseDatetime.value;
+                if (!dtValue) return alert('Укажи дату и время');
+                let name, icon, costPerDay = 0;
+
+                if (editingHabitId) {
+                    name = setupNameInput.value.trim();
+                    if (!name) return alert('Введи название');
+                    icon = setupIconInput.value.trim() || '🎯';
+                    costPerDay = parseFloat(dailyCostInput.value) || 0;
+                } else if (currentSetupHabit?.type === 'cigarettes') {
+                    name = 'Сигареты';
+                    icon = '🚬';
+                    const perDay = parseFloat(cigPerDayInput.value) || 0;
+                    const packCost = parseFloat(cigPackCostInput.value) || 0;
+                    costPerDay = (perDay / 20) * packCost;
+                } else if (currentSetupHabit?.type === 'vape') {
+                    name = 'Вейп';
+                    icon = '💨';
+                    const monthly = parseFloat(vapeMonthlyCostInput.value) || 0;
+                    costPerDay = monthly / 30;
+                } else {
+                    name = setupNameInput.value.trim();
+                    if (!name) return alert('Введи название привычки');
+                    icon = setupIconInput.value.trim() || '🎯';
+                    costPerDay = parseFloat(dailyCostInput.value) || 0;
+                }
+
+                const startTime = new Date(dtValue).getTime();
+                if (isNaN(startTime)) return alert('Неверная дата/время');
+                if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
+
+                const habitData = { id: editingHabitId || Date.now(), type: 'custom', name, icon, startTime, costPerDay };
+
+                if (editingHabitId) {
+                    const idx = habits.findIndex(h => h.id === editingHabitId);
+                    if (idx !== -1) habits[idx] = habitData;
+                } else {
+                    habits.push(habitData);
+                }
+                saveHabits();
+                goToTracker();
+            }
+
+            // ========== Сброс с модальным окном ==========
+            function resetHabit(id) {
+                pendingResetId = id;
+                confirmModal.style.display = 'flex';
+            }
+
+            confirmYes.addEventListener('click', () => {
+                if (pendingResetId !== null) {
+                    const habit = habits.find(h => h.id === pendingResetId);
+                    if (habit) {
+                        habit.startTime = Date.now();
+                        saveHabits();
+                        renderHabits();
+                    }
+                    pendingResetId = null;
+                }
+                confirmModal.style.display = 'none';
+            });
+
+            confirmNo.addEventListener('click', () => {
+                pendingResetId = null;
+                confirmModal.style.display = 'none';
+            });
+
+            // ========== Удаление ==========
+            function deleteHabit(id) {
+                if (!confirm('Точно удалить эту привычку?')) return;
+                habits = habits.filter(h => h.id !== id);
+                saveHabits();
+                renderSettingsList();
+                renderHabits();
+                if (habits.length === 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+
+            // ========== Рендеринг ==========
+            function formatTimeDiff(ms) {
+                const totalSeconds = Math.floor(ms / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                return `${days}д ${hours}ч ${minutes}м ${seconds}с`;
+            }
+
+            function getAchievement(days) {
+                if (days >= 365) return '🏆 Год без!';
+                if (days >= 180) return '🎉 Полгода!';
+                if (days >= 90) return '💪 3 месяца!';
+                if (days >= 30) return '🌟 Месяц!';
+                if (days >= 7) return '🔥 Неделя!';
+                if (days >= 1) return '👍 1 день!';
+                return '';
+            }
+
+            function renderHabits() {
+                if (habits.length === 0) {
+                    habitsContainer.innerHTML = '<p style="margin-top:20px;">У тебя пока нет привычек. Добавь их в настройках!</p>';
+                    totalMoneyEl.textContent = '';
+                    timerElements = [];
+                    return;
+                }
+                habitsContainer.innerHTML = '';
+                timerElements = [];
+                let totalSavings = 0;
+
+                habits.forEach(h => {
+                    const diff = Math.max(0, Date.now() - h.startTime);
+                    const days = Math.floor(diff / 86400);
+                    const moneySaved = (h.costPerDay || 0) * days;
+                    totalSavings += moneySaved;
+                    const achievement = getAchievement(days);
+
+                    const card = document.createElement('div');
+                    card.className = 'habit-card';
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'icon';
+                    iconDiv.style.fontSize = '32px';
+                    iconDiv.style.marginBottom = '5px';
+                    iconDiv.textContent = h.icon;
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'habit-name';
+                    nameDiv.textContent = h.name;
+
+                    const timerDiv = document.createElement('div');
+                    timerDiv.className = 'timer';
+                    timerDiv.dataset.id = h.id;
+                    timerDiv.textContent = formatTimeDiff(diff);
+
+                    card.appendChild(iconDiv);
+                    card.appendChild(nameDiv);
+                    card.appendChild(timerDiv);
+
+                    if (moneySaved > 0) {
+                        const moneyDiv = document.createElement('div');
+                        moneyDiv.className = 'money';
+                        moneyDiv.textContent = `💰 Сэкономлено ≈ ${Math.round(moneySaved)} ₽`;
+                        card.appendChild(moneyDiv);
+                    }
+                    if (achievement) {
+                        const achDiv = document.createElement('div');
+                        achDiv.className = 'achievement';
+                        achDiv.textContent = achievement;
+                        card.appendChild(achDiv);
+                    }
+
+                    const resetBtn = document.createElement('button');
+                    resetBtn.className = 'reset-btn';
+                    resetBtn.textContent = '😞 Я сорвался';
+                    resetBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        resetHabit(h.id);
+                    });
+                    card.appendChild(resetBtn);
+
+                    habitsContainer.appendChild(card);
+                    timerElements.push({ element: timerDiv, id: h.id });
+                });
+
+                totalMoneyEl.textContent = totalSavings > 0 ? `Общая экономия: ≈ ${Math.round(totalSavings)} ₽` : '';
+            }
+
+            function renderSettingsList() {
+                if (habits.length === 0) {
+                    settingsListContainer.innerHTML = '<p style="margin-top:10px;">Список пуст.</p>';
+                    return;
+                }
+                settingsListContainer.innerHTML = '';
+                habits.forEach(h => {
+                    const item = document.createElement('div');
+                    item.className = 'settings-list-item';
+                    const span = document.createElement('span');
+                    span.textContent = h.icon + ' ' + h.name;
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'btn-group';
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = '✏️';
+                    editBtn.addEventListener('click', () => openEditHabit(h));
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'del-btn';
+                    delBtn.textContent = 'Удалить';
+                    delBtn.addEventListener('click', () => deleteHabit(h.id));
+                    btnGroup.appendChild(editBtn);
+                    btnGroup.appendChild(delBtn);
+                    item.appendChild(span);
+                    item.appendChild(btnGroup);
+                    settingsListContainer.appendChild(item);
+                });
+            }
+
+            // ========== Открытие настроек (исправлено) ==========
+            function showSettings() {
+                console.log('⚙️ showSettings вызвана');
+                renderSettingsList();
+                showScreen('settings');
+            }
+
+            function updateAllTimers() {
+                timerElements.forEach(({ element, id }) => {
+                    const habit = habits.find(h => h.id == id);
+                    if (habit) {
+                        const diff = Math.max(0, Date.now() - habit.startTime);
+                        element.textContent = formatTimeDiff(diff);
+                    }
+                });
+            }
+
+            function saveHabits() {
+                if (storageAvailable) localStorage.setItem('habitsData', JSON.stringify(habits));
+            }
+
+            function loadHabits() {
+                if (storageAvailable) {
+                    const data = localStorage.getItem('habitsData');
+                    habits = data ? JSON.parse(data) : [];
+                } else {
+                    habits = [];
+                }
+            }
+
+            function loadApp() {
+                loadHabits();
+                if (habits.length > 0) {
+                    goToTracker();
+                } else {
+                    goToWelcome();
+                }
+            }
+
+            // ========== Привязка кнопок (вместо onclick) ==========
+            document.getElementById('btn-save-name').addEventListener('click', saveName);
+            document.getElementById('btn-cigarettes').addEventListener('click', () => selectHabit('cigarettes'));
+            document.getElementById('btn-vape').addEventListener('click', () => selectHabit('vape'));
+            document.getElementById('btn-custom').addEventListener('click', showCustomInput);
+            document.getElementById('btn-confirm-custom').addEventListener('click', confirmCustom);
+            setupSaveBtn.addEventListener('click', saveHabitFromSetup);
+            document.getElementById('btn-open-settings').addEventListener('click', showSettings);
+            document.getElementById('btn-add-from-settings').addEventListener('click', openSetupFromSettings);
+            document.getElementById('btn-back-to-tracker').addEventListener('click', goToTracker);
+
+            // ========== Старт ==========
+            const savedName = storageAvailable ? localStorage.getItem('my_username') : null;
+            if (savedName) {
+                userName = savedName;
+                welcomeTitle.textContent = 'Привет, ' + userName + '!';
+                loadApp();
+            } else {
+                showScreen('name');
+                $('name-input').focus();
+            }
+
+            // Таймер
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (screenTracker.classList.contains('active')) {
+                    updateAllTimers();
+                }
+            }, 1000);
+
+            // visualViewport
+            window.visualViewport?.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+            });
+
+            console.log('✅ Инициализация завершена');
+        })();
     </script>
 </body>
 </html>
