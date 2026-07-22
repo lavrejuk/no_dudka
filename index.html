@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Трекер привычек</title>
+    <title>Трекер привычек v4</title>
+    
+    <!-- Запрет кэширования для авто-обновления -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <!-- Подключаем шрифт Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +44,6 @@
         }
 
         body {
-            /* Применяем шрифт Montserrat */
             font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
@@ -52,7 +57,6 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* ======= БЕЗ АНИМАЦИЙ ======= */
         .screen {
             display: none;
             width: 100%;
@@ -66,10 +70,8 @@
         }
 
         button:active {
-            /* Лёгкое сжатие при нажатии (можно убрать, если мешает) */
             transform: scale(0.98);
         }
-        /* ============================ */
 
         h2 {
             font-size: 24px;
@@ -139,30 +141,30 @@
         }
 
         .timer {
-            font-size: 2.8em;
+            font-size: 2.5em;
             font-weight: bold;
-            margin: 20px 0;
+            margin: 10px 0;
             word-break: break-all;
             font-variant-numeric: tabular-nums;
         }
 
-        .saved {
-            font-size: 1.4em;
+        .saved-money {
+            font-size: 1.2em;
             color: var(--success);
-            margin: 10px 0 20px;
+            margin-bottom: 10px;
             font-weight: bold;
         }
 
         .habit-name {
-            font-size: 1.1em;
-            color: var(--hint);
-            margin-bottom: 16px;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .icon {
-            font-size: 64px;
+            font-size: 48px;
             display: block;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }
 
         .divider {
@@ -179,6 +181,50 @@
             font-size: 12px;
             margin: 4px 0 8px;
         }
+
+        /* Стили для карточек привычек в трекере */
+        .habit-card {
+            background: var(--secondary-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 320px;
+            position: relative;
+        }
+
+        .habit-card .timer {
+            font-size: 2em;
+        }
+
+        /* Стили для списка в настройках */
+        .settings-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--secondary-bg);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            width: 100%;
+            max-width: 320px;
+        }
+        
+        .settings-list-item .del-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
+        
+        .settings-list-item .del-btn:active {
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -192,7 +238,7 @@
         <button onclick="saveName()">✅ Продолжить</button>
     </div>
 
-    <!-- ЭКРАН 1: Выбор привычки (Главный экран) -->
+    <!-- ЭКРАН 1: Выбор привычки (Главное меню) -->
     <div id="screen-welcome" class="screen active">
         <span class="icon">🔥</span>
         <h2 id="welcome-title">Привет!</h2>
@@ -205,52 +251,52 @@
             <input type="text" id="custom-input" placeholder="Введи свою привычку" maxlength="30">
             <button onclick="confirmCustom()">Далее</button>
         </div>
-        <div class="divider"></div>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint);" onclick="showSettings()">⚙️ Настройки (сменить имя)</button>
     </div>
 
-    <!-- ЭКРАН 2: Настройка даты/времени и стоимости -->
+    <!-- ЭКРАН 2: Настройка новой привычки (Название, Дата, Время) -->
     <div id="screen-setup" class="screen">
         <span class="icon">⚙️</span>
-        <h2>Настройка</h2>
+        <h2>Добавление</h2>
         <p id="habit-label"></p>
         
-        <label>Когда было последний раз?</label>
+        <label>Дата и время последнего использования:</label>
         <input type="datetime-local" id="last-use-datetime">
         
-        <div id="cost-block" style="display:none;">
-            <label>Сигарет в день (шт):</label>
-            <input type="number" id="per-day-input" placeholder="Например 10" min="0" step="1">
-            
-            <label>Стоимость одной пачки (₽):</label>
-            <input type="number" id="pack-cost-input" placeholder="Например 200" min="0" step="1">
-        </div>
-        
-        <button onclick="startTracking()">🚀 Начать отсчёт</button>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад</button>
+        <button onclick="addNewHabitFromSetup()">🚀 Добавить и начать отсчёт</button>
+        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад к выбору</button>
     </div>
 
-    <!-- ЭКРАН 3: Основной экран трекинга -->
+    <!-- ЭКРАН 3: Главный экран со списком таймеров -->
     <div id="screen-tracker" class="screen">
         <span class="icon">💪</span>
-        <h2>Ты держишься!</h2>
-        <p class="habit-name" id="display-habit"></p>
-        <div class="timer" id="timer">0д 0ч 0м 0с</div>
-        <div class="saved" id="money-saved"></div>
+        <h2 id="tracker-title">Твои привычки</h2>
+        <div id="habits-container"></div>
         
-        <button onclick="resetAll()">🔄 Сбросить и начать заново</button>
         <div class="divider"></div>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="showSettings()">⚙️ Настройки (сменить имя)</button>
+        
+        <!-- Кнопка добавления новой привычки и скрытая форма -->
+        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-bottom: 8px;" onclick="toggleAddHabitForm()">➕ Добавить привычку</button>
+        <div id="add-habit-block" style="display: none; width: 100%; max-width: 320px;">
+            <input type="text" id="tracker-custom-input" placeholder="Название привычки" maxlength="30">
+            <label style="text-align: left; display: block; margin-top: 8px; font-size: 12px;">Дата последнего использования:</label>
+            <input type="datetime-local" id="tracker-last-date-input">
+            <button onclick="addNewHabitFromTracker()" style="margin-top: 0;">➕ Добавить</button>
+        </div>
+        
+        <div class="divider"></div>
+        <button class="outline" style="border-color: var(--hint); color: var(--hint);" onclick="showSettings()">⚙️ Настройки</button>
     </div>
 
-    <!-- ЭКРАН 4: Настройки (Смена имени) -->
+    <!-- ЭКРАН 4: Настройки (Только управление списком привычек) -->
     <div id="screen-settings" class="screen">
         <span class="icon">⚙️</span>
-        <h2>Сменить имя</h2>
-        <p>Введи новое имя, как я должен к тебе обращаться</p>
-        <input type="text" id="settings-name-input" placeholder="Введи новое имя..." maxlength="20" autocomplete="off">
-        <button onclick="saveSettingsName()">💾 Сохранить</button>
-        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToWelcome()">← Назад</button>
+        <h2>Настройки</h2>
+        <p>Управление привычками</p>
+        <h3 style="font-size: 18px; margin-top: 10px;">Список привычек</h3>
+        <div id="settings-list-container"></div>
+
+        <div class="divider"></div>
+        <button class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;" onclick="goToTracker()">← Назад к таймерам</button>
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -270,7 +316,6 @@
 
         // ============ DOM элементы ============
         const nameInput = document.getElementById('name-input');
-        const settingsNameInput = document.getElementById('settings-name-input');
         const screens = {
             name: document.getElementById('screen-name'),
             welcome: document.getElementById('screen-welcome'),
@@ -283,74 +328,81 @@
         const customInput = document.getElementById('custom-input');
         const habitLabel = document.getElementById('habit-label');
         const lastUseDatetime = document.getElementById('last-use-datetime');
-        const costBlock = document.getElementById('cost-block');
-        const perDayInput = document.getElementById('per-day-input');
-        const packCostInput = document.getElementById('pack-cost-input');
-        const displayHabit = document.getElementById('display-habit');
-        const timerEl = document.getElementById('timer');
-        const moneySavedEl = document.getElementById('money-saved');
+        const habitsContainer = document.getElementById('habits-container');
+        const settingsListContainer = document.getElementById('settings-list-container');
 
-        let currentHabit = null;
+        // Новые элементы для главного экрана
+        const trackerCustomInput = document.getElementById('tracker-custom-input');
+        const trackerLastDateInput = document.getElementById('tracker-last-date-input');
+        const addHabitBlock = document.getElementById('add-habit-block');
+
+        let habits = [];
         let timerInterval = null;
         let userName = "Друг";
+        let currentSetupHabit = null;
 
-        // ============ Функции ============
+        // ============ Функции управления экранами ============
         function showScreen(name) {
             Object.values(screens).forEach(s => s.classList.remove('active'));
             screens[name].classList.add('active');
         }
 
-        // Сохранить имя при первом запуске
-        function saveName() {
-            const val = nameInput.value.trim();
-            if (!val) return alert('Пожалуйста, введи своё имя!');
-            
-            userName = val;
-            localStorage.setItem('my_username', userName);
-            welcomeTitle.textContent = 'Привет, ' + userName + '!';
-            showScreen('welcome');
-            customBlock.style.display = 'none';
-        }
-
-        // Перейти в настройки (очищаем поле, чтобы убрать автозаполнение браузера на ПК)
-        function showSettings() {
-            settingsNameInput.value = '';
-            settingsNameInput.placeholder = 'Введи новое имя...';
-            setTimeout(() => settingsNameInput.focus(), 100);
-            showScreen('settings');
-        }
-
-        // Сохранить новое имя из настроек
-        function saveSettingsName() {
-            const val = settingsNameInput.value.trim();
-            if (!val) return alert('Имя не может быть пустым!');
-            
-            localStorage.setItem('my_username', val);
-            userName = val;
-            welcomeTitle.textContent = 'Привет, ' + userName + '!';
-            alert('Имя успешно изменено на "' + val + '"!');
-            goToWelcome();
-        }
-
-        // Вернуться на главную
         function goToWelcome() {
             showScreen('welcome');
             customBlock.style.display = 'none';
         }
 
-        function getHabitName(type) {
-            const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
-            return names[type] || type;
+        function goToTracker() {
+            renderHabits();
+            updateAllTimers();
+            showScreen('tracker');
         }
 
-        function getHabitIcon(type) {
-            const icons = { cigarettes: '🚬', vape: '💨' };
-            return icons[type] || '🎯';
+        // ============ Сохранение имени ============
+        function saveName() {
+            const val = nameInput.value.trim();
+            if (!val) return alert('Пожалуйста, введи своё имя!');
+            userName = val;
+            localStorage.setItem('my_username', userName);
+            welcomeTitle.textContent = 'Привет, ' + userName + '!';
+            loadApp();
+        }
+
+        // ============ Логика привычек ============
+        function toggleAddHabitForm() {
+            if (addHabitBlock.style.display === 'none') {
+                addHabitBlock.style.display = 'block';
+                trackerCustomInput.focus();
+                setDefaultTrackerDateTime();
+            } else {
+                addHabitBlock.style.display = 'none';
+            }
+        }
+
+        function setDefaultTrackerDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            trackerLastDateInput.value = now.toISOString().slice(0, 16);
         }
 
         function selectHabit(type) {
-            currentHabit = { type: type, name: getHabitName(type), icon: getHabitIcon(type) };
-            showSetupScreen();
+            const names = { cigarettes: 'Сигареты', vape: 'Вейп' };
+            const icons = { cigarettes: '🚬', vape: '💨' };
+            
+            currentSetupHabit = { 
+                type: type, 
+                name: names[type] || type, 
+                icon: icons[type] || '🎯' 
+            };
+            habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
+            showScreen('setup');
+            setDefaultSetupDateTime();
+        }
+
+        function setDefaultSetupDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            lastUseDatetime.value = now.toISOString().slice(0, 16);
         }
 
         function showCustomInput() {
@@ -361,104 +413,204 @@
         function confirmCustom() {
             const val = customInput.value.trim();
             if (!val) return alert('Введи название привычки');
-            currentHabit = { type: 'custom', name: val, icon: '🎯' };
-            showSetupScreen();
-        }
-
-        function showSetupScreen() {
-            habitLabel.textContent = 'Привычка: ' + currentHabit.icon + ' ' + currentHabit.name;
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            lastUseDatetime.value = now.toISOString().slice(0, 16);
-            
-            if (currentHabit.type === 'cigarettes') {
-                costBlock.style.display = 'block';
-                perDayInput.value = '';
-                packCostInput.value = '';
-            } else {
-                costBlock.style.display = 'none';
-            }
+            currentSetupHabit = { type: 'custom', name: val, icon: '🎯' };
+            habitLabel.textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
             showScreen('setup');
+            setDefaultSetupDateTime();
         }
 
-        function startTracking() {
+        // Функция добавления из экрана первоначального выбора
+        function addNewHabitFromSetup() {
             const dtValue = lastUseDatetime.value;
             if (!dtValue) return alert('Укажи дату и время последнего использования');
             const startTime = new Date(dtValue).getTime();
             if (isNaN(startTime)) return alert('Неверная дата/время');
             if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
-            
-            let costPerDay = 0;
-            if (costBlock.style.display !== 'none') {
-                const perDay = parseFloat(perDayInput.value) || 0;
-                const packCost = parseFloat(packCostInput.value) || 0;
-                // Математика: (сигарет в день / 20) * стоимость пачки
-                costPerDay = (perDay / 20) * packCost;
-            }
-            
-            currentHabit.startTime = startTime;
-            currentHabit.costPerDay = costPerDay;
-            localStorage.setItem('habitData', JSON.stringify(currentHabit));
-            displayHabit.textContent = currentHabit.icon + ' ' + currentHabit.name;
-            showScreen('tracker');
-            if (timerInterval) clearInterval(timerInterval);
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
+
+            const newHabit = {
+                id: Date.now(),
+                type: currentSetupHabit.type,
+                name: currentSetupHabit.name,
+                icon: currentSetupHabit.icon,
+                startTime: startTime,
+                costPerDay: 0
+            };
+
+            habits.push(newHabit);
+            saveHabits();
+            goToTracker();
         }
 
-        function updateTimer() {
-            const now = Date.now();
-            const diff = Math.max(0, now - currentHabit.startTime);
-            const totalSeconds = Math.floor(diff / 1000);
-            const days = Math.floor(totalSeconds / 86400);
-            const hours = Math.floor((totalSeconds % 86400) / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            
-            timerEl.textContent = days + 'д ' + hours + 'ч ' + minutes + 'м ' + seconds + 'с';
+        // Функция добавления дополнительной привычки из главного экрана
+        function addNewHabitFromTracker() {
+            const val = trackerCustomInput.value.trim();
+            if (!val) return alert('Введи название привычки');
 
-            if (currentHabit.costPerDay > 0) {
-                const daysPassed = diff / (1000 * 60 * 60 * 24);
-                const saved = daysPassed * currentHabit.costPerDay;
-                moneySavedEl.textContent = '💰 Сэкономлено: ' + Math.round(saved).toLocaleString('ru-RU') + ' ₽';
+            const dtValue = trackerLastDateInput.value;
+            if (!dtValue) return alert('Укажи дату и время последнего использования');
+            const startTime = new Date(dtValue).getTime();
+            if (isNaN(startTime)) return alert('Неверная дата/время');
+            if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
+
+            const newHabit = {
+                id: Date.now(),
+                type: 'custom',
+                name: val,
+                icon: '🎯',
+                startTime: startTime,
+                costPerDay: 0
+            };
+
+            habits.push(newHabit);
+            saveHabits();
+            
+            // Очищаем поля и скрываем блок
+            trackerCustomInput.value = '';
+            addHabitBlock.style.display = 'none';
+            
+            renderHabits();
+            updateAllTimers();
+        }
+
+        function deleteHabit(id) {
+            if (confirm('Точно удалить эту привычку?')) {
+                habits = habits.filter(h => h.id !== id);
+                saveHabits();
+                renderSettingsList();
+                renderHabits();
+                if (habits.length === 0) {
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+        }
+
+        // ============ Логика отображения и работы таймера ============
+        function saveHabits() {
+            localStorage.setItem('habitsData', JSON.stringify(habits));
+        }
+
+        function loadHabits() {
+            const data = localStorage.getItem('habitsData');
+            if (data) {
+                habits = JSON.parse(data);
             } else {
-                moneySavedEl.textContent = '';
+                habits = [];
             }
         }
 
-        function resetAll() {
-            if (confirm('Точно сбросить весь прогресс? Действие нельзя отменить.')) {
-                if (timerInterval) clearInterval(timerInterval);
-                localStorage.removeItem('habitData');
-                currentHabit = null;
+        function loadApp() {
+            loadHabits();
+            if (habits.length > 0) {
+                goToTracker();
+            } else {
                 goToWelcome();
-                customBlock.style.display = 'none';
-                customInput.value = '';
             }
         }
 
-        // ============ Инициализация при загрузке ============
-        const savedName = localStorage.getItem('my_username');
-        const savedData = JSON.parse(localStorage.getItem('habitData') || 'null');
+        function renderHabits() {
+            if (habits.length === 0) {
+                habitsContainer.innerHTML = `<p style="margin-top: 20px;">У тебя пока нет привычек. Добавь их в настройках!</p>`;
+                return;
+            }
+            let html = '';
+            habits.forEach(h => {
+                const diff = Math.max(0, Date.now() - h.startTime);
+                const totalSeconds = Math.floor(diff / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const timeStr = `${days}д ${hours}ч ${minutes}м ${seconds}с`;
 
+                let moneyStr = '';
+                if (h.costPerDay > 0) {
+                    const saved = (diff / (1000 * 60 * 60 * 24)) * h.costPerDay;
+                    moneyStr = `<div class="saved-money">💰 Сэкономлено: ${Math.round(saved).toLocaleString('ru-RU')} ₽</div>`;
+                }
+
+                html += `
+                    <div class="habit-card">
+                        <div class="icon" style="font-size: 32px; margin-bottom: 5px;">${h.icon}</div>
+                        <div class="habit-name">${h.name}</div>
+                        <div class="timer" data-id="${h.id}">${timeStr}</div>
+                        ${moneyStr}
+                    </div>
+                `;
+            });
+            habitsContainer.innerHTML = html;
+        }
+
+        function renderSettingsList() {
+            if (habits.length === 0) {
+                settingsListContainer.innerHTML = `<p style="margin-top: 10px; font-size: 14px;">Список пуст.</p>`;
+                return;
+            }
+            let html = '';
+            habits.forEach(h => {
+                html += `
+                    <div class="settings-list-item">
+                        <span>${h.icon} ${h.name}</span>
+                        <button class="del-btn" onclick="deleteHabit(${h.id})">Удалить</button>
+                    </div>
+                `;
+            });
+            settingsListContainer.innerHTML = html;
+        }
+
+        function showSettings() {
+            renderSettingsList();
+            showScreen('settings');
+        }
+
+        function updateAllTimers() {
+            if (habits.length === 0) return;
+            
+            const habitCards = document.querySelectorAll('#habits-container .habit-card');
+            if (habitCards.length === 0) return;
+
+            habits.forEach(h => {
+                const timerElement = document.querySelector(`.timer[data-id="${h.id}"]`);
+                if (timerElement) {
+                    const diff = Math.max(0, Date.now() - h.startTime);
+                    const totalSeconds = Math.floor(diff / 1000);
+                    const days = Math.floor(totalSeconds / 86400);
+                    const hours = Math.floor((totalSeconds % 86400) / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
+                    timerElement.textContent = `${days}д ${hours}ч ${minutes}м ${seconds}с`;
+                }
+
+                const card = document.querySelector(`.habit-card .timer[data-id="${h.id}"]`)?.parentElement;
+                if (card && h.costPerDay > 0) {
+                    const moneyEl = card.querySelector('.saved-money');
+                    if (moneyEl) {
+                        const diff = Math.max(0, Date.now() - h.startTime);
+                        const saved = (diff / (1000 * 60 * 60 * 24)) * h.costPerDay;
+                        moneyEl.textContent = `💰 Сэкономлено: ${Math.round(saved).toLocaleString('ru-RU')} ₽`;
+                    }
+                }
+            });
+        }
+
+        // ============ Запуск приложения ============
+        const savedName = localStorage.getItem('my_username');
         if (savedName) {
             userName = savedName;
             welcomeTitle.textContent = 'Привет, ' + userName + '!';
-            
-            if (savedData && savedData.startTime) {
-                currentHabit = savedData;
-                displayHabit.textContent = (currentHabit.icon || '🎯') + ' ' + currentHabit.name;
-                showScreen('tracker');
-                updateTimer();
-                timerInterval = setInterval(updateTimer, 1000);
-            } else {
-                showScreen('welcome');
-                customBlock.style.display = 'none';
-            }
+            loadApp();
         } else {
             showScreen('name');
             nameInput.focus();
         }
+
+        // Запускаем общий интервал для обновления всех таймеров раз в секунду
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (screens.tracker.classList.contains('active')) {
+                updateAllTimers();
+            }
+        }, 1000);
     </script>
 </body>
 </html>
