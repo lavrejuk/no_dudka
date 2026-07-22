@@ -16,8 +16,6 @@
             --success: #4caf50;
         }
 
-        /* Телеграм автоматически подставит свои цвета в data-theme, если использовать tg.setThemeParams() */
-        /* Но для надежности оставим и медиа-запросы */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg: #1e1e1e;
@@ -213,19 +211,16 @@
         <button onclick="resetAll()">🔄 Сбросить и начать заново</button>
     </div>
 
-    <!-- ============================================= -->
-    <!-- ПОДКЛЮЧЕНИЕ БИБЛИОТЕКИ И ВЕСЬ JS КОД НИЖЕ -->
-    <!-- ВАЖНО: ЗДЕСЬ БОЛЬШЕ НЕТ ОШИБКИ С ВЛОЖЕННЫМИ ТЕГАМИ -->
-    <!-- ============================================= -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- ВЕСЬ JS КОД ЗАПИСАН КАК ОБЫЧНЫЙ ТЕКСТ В ПЕРЕМЕННОЙ -->
     <script>
+        var jsCode = `
         // ============ Инициализация Telegram ============
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
-            
-            // Чтобы ваши CSS переменные совпадали с темой Telegram
             document.documentElement.style.setProperty('--bg', tg.backgroundColor || '#ffffff');
             document.documentElement.style.setProperty('--text', tg.textColor || '#000000');
             document.documentElement.style.setProperty('--button', tg.buttonColor || '#3390ec');
@@ -260,22 +255,12 @@
         }
 
         function getHabitName(type) {
-            const names = {
-                cigarettes: 'Сигареты',
-                vape: 'Вейп',
-                fastfood: 'Фастфуд',
-                porn: 'Порно'
-            };
+            const names = { cigarettes: 'Сигареты', vape: 'Вейп', fastfood: 'Фастфуд', porn: 'Порно' };
             return names[type] || type;
         }
 
         function getHabitIcon(type) {
-            const icons = {
-                cigarettes: '🚬',
-                vape: '💨',
-                fastfood: '🍔',
-                porn: '🔞'
-            };
+            const icons = { cigarettes: '🚬', vape: '💨', fastfood: '🍔', porn: '🔞' };
             return icons[type] || '🎯';
         }
 
@@ -297,45 +282,31 @@
         }
 
         function showSetupScreen() {
-            habitLabel.textContent = `Привычка: ${currentHabit.icon} ${currentHabit.name}`;
-            
-            // Устанавливаем текущее время по умолчанию
+            habitLabel.textContent = 'Привычка: ' + currentHabit.icon + ' ' + currentHabit.name;
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             lastUseDatetime.value = now.toISOString().slice(0, 16);
-            
             if (currentHabit.type === 'cigarettes' || currentHabit.type === 'vape') {
                 costBlock.style.display = 'block';
                 costInput.value = '';
             } else {
                 costBlock.style.display = 'none';
             }
-            
             showScreen('setup');
         }
 
         function startTracking() {
             const dtValue = lastUseDatetime.value;
             if (!dtValue) return alert('Укажи дату и время последнего использования');
-            
             const startTime = new Date(dtValue).getTime();
             if (isNaN(startTime)) return alert('Неверная дата/время');
-            
             if (startTime > Date.now()) return alert('Дата не может быть в будущем!');
-            
             const cost = (costBlock.style.display !== 'none') ? parseFloat(costInput.value) || 0 : 0;
-            
             currentHabit.startTime = startTime;
             currentHabit.costPerDay = cost;
-            
-            // Сохраняем
             localStorage.setItem('habitData', JSON.stringify(currentHabit));
-            
-            // Показываем трекер
-            displayHabit.textContent = `${currentHabit.icon} ${currentHabit.name}`;
+            displayHabit.textContent = currentHabit.icon + ' ' + currentHabit.name;
             showScreen('tracker');
-            
-            // Запускаем обновление таймера
             if (timerInterval) clearInterval(timerInterval);
             updateTimer();
             timerInterval = setInterval(updateTimer, 1000);
@@ -344,19 +315,16 @@
         function updateTimer() {
             const now = Date.now();
             const diff = Math.max(0, now - currentHabit.startTime);
-            
             const totalSeconds = Math.floor(diff / 1000);
             const days = Math.floor(totalSeconds / 86400);
             const hours = Math.floor((totalSeconds % 86400) / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
-            
-            timerEl.textContent = `${days}д ${hours}ч ${minutes}м ${seconds}с`;
-            
+            timerEl.textContent = days + 'д ' + hours + 'ч ' + minutes + 'м ' + seconds + 'с';
             if (currentHabit.costPerDay > 0) {
                 const daysPassed = diff / (1000 * 60 * 60 * 24);
                 const saved = daysPassed * currentHabit.costPerDay;
-                moneySavedEl.textContent = `💰 Сэкономлено: ${Math.round(saved).toLocaleString('ru-RU')} ₽`;
+                moneySavedEl.textContent = '💰 Сэкономлено: ' + Math.round(saved).toLocaleString('ru-RU') + ' ₽';
             } else {
                 moneySavedEl.textContent = '';
             }
@@ -374,17 +342,20 @@
         }
 
         // ============ Инициализация ============
-        // Проверяем сохранённые данные при загрузке
         const savedData = JSON.parse(localStorage.getItem('habitData') || 'null');
         if (savedData && savedData.startTime) {
             currentHabit = savedData;
-            displayHabit.textContent = `${currentHabit.icon || '🎯'} ${currentHabit.name}`;
+            displayHabit.textContent = (currentHabit.icon || '🎯') + ' ' + currentHabit.name;
             showScreen('tracker');
             updateTimer();
             timerInterval = setInterval(updateTimer, 1000);
         } else {
             showScreen('welcome');
         }
+        `;
+        
+        // Вставляем этот текст в страницу как исполняемый JS код
+        eval(jsCode);
     </script>
 </body>
 </html>
