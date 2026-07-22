@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v8.1</title>
+    <title>Трекер привычек v8.2</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -14,7 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* ... весь CSS без изменений ... */
         :root {
             --bg: #ffffff;
             --text: #000000;
@@ -55,6 +54,7 @@
             align-items: center;
             justify-content: flex-start;
             transition: background 0.3s, color 0.3s;
+            font-size: 14px; /* общий базовый размер уменьшен */
         }
 
         .screen {
@@ -74,13 +74,13 @@
         }
 
         h2 {
-            font-size: 24px;
+            font-size: 20px; /* было 24px */
             font-weight: 700;
             margin-bottom: 8px;
         }
 
         p {
-            font-size: 16px;
+            font-size: 14px; /* было 16px */
             font-weight: 400;
             margin-bottom: 16px;
             color: var(--hint);
@@ -90,9 +90,9 @@
             background: var(--button);
             color: var(--button-text);
             border: none;
-            padding: 14px 20px;
+            padding: 12px 18px; /* немного меньше */
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 14px; /* было 16px */
             font-weight: 600;
             margin: 6px 0;
             cursor: pointer;
@@ -119,7 +119,7 @@
         }
 
         input, select {
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 10px;
             border: 1px solid var(--hint);
             background: var(--secondary-bg);
@@ -127,7 +127,7 @@
             width: 100%;
             max-width: 320px;
             margin: 8px 0;
-            font-size: 16px;
+            font-size: 14px;
             font-family: 'Montserrat', sans-serif;
         }
 
@@ -136,13 +136,13 @@
             text-align: left;
             max-width: 320px;
             margin: 12px auto 4px;
-            font-size: 14px;
+            font-size: 13px; /* было 14px */
             font-weight: 500;
             color: var(--hint);
         }
 
         .timer {
-            font-size: 2.5em;
+            font-size: 2em; /* было 2.5em */
             font-weight: bold;
             margin: 10px 0;
             word-break: break-all;
@@ -150,13 +150,13 @@
         }
 
         .habit-name {
-            font-size: 1.2em;
+            font-size: 1.1em; /* было 1.2em */
             font-weight: 600;
             margin-bottom: 5px;
         }
 
         .icon {
-            font-size: 48px;
+            font-size: 40px; /* было 48px */
             display: block;
             margin-bottom: 10px;
         }
@@ -187,7 +187,7 @@
         }
 
         .habit-card .timer {
-            font-size: 2em;
+            font-size: 1.8em; /* было 2em */
         }
 
         .settings-list-item {
@@ -200,6 +200,7 @@
             margin-bottom: 8px;
             width: 100%;
             max-width: 320px;
+            font-size: 14px;
         }
         
         .settings-list-item .btn-group {
@@ -213,7 +214,7 @@
             border: none;
             border-radius: 8px;
             padding: 6px 12px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             width: auto;
             margin: 0;
@@ -226,16 +227,18 @@
         .reset-btn {
             background: var(--danger);
             margin-top: 8px;
+            font-size: 13px;
+            padding: 10px 16px;
         }
 
         .achievement {
-            font-size: 13px;
+            font-size: 12px;
             margin: 4px 0;
             color: var(--hint);
         }
 
         .money {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--success);
             margin: 4px 0;
         }
@@ -286,16 +289,19 @@
             max-width: 320px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-size: 14px;
         }
 
         .modal-box p {
             margin-bottom: 20px;
             font-weight: 600;
             color: var(--text);
+            font-size: 15px;
         }
 
         .modal-box button {
             margin: 6px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -339,9 +345,9 @@
         <div id="setup-custom-block" style="display: none;">
             <label>Название привычки:</label>
             <input type="text" id="setup-name-input" placeholder="Название" maxlength="30">
-            <label>Иконка (эмодзи):</label>
-            <input type="text" id="setup-icon-input" placeholder="Выбери или введи эмодзи" maxlength="2">
+            <label>Выбери иконку:</label>
             <div class="emoji-picker" id="emoji-picker"></div>
+            <!-- Поле ввода эмодзи убрано, иконка сохраняется в переменную selectedEmoji -->
         </div>
         <label>Дата и время последнего использования:</label>
         <input type="datetime-local" id="last-use-datetime">
@@ -367,7 +373,7 @@
         <span class="icon">💪</span>
         <h2 id="tracker-title">Твои привычки</h2>
         <div id="habits-container"></div>
-        <div id="total-money" class="money" style="margin-top: 12px; font-weight: 600;"></div>
+        <div id="total-money" class="money" style="margin-top: 12px; font-weight: 600; font-size: 15px;"></div>
         <div class="divider"></div>
         <button id="btn-open-settings" class="outline" style="border-color: var(--hint); color: var(--hint);">⚙️ Настройки</button>
     </div>
@@ -378,7 +384,7 @@
         <p>Управление привычками</p>
         <button id="btn-add-from-settings">➕ Добавить привычку</button>
         <div class="divider"></div>
-        <h3 style="font-size: 18px; margin-top: 10px;">Список привычек</h3>
+        <h3 style="font-size: 16px; margin-top: 10px;">Список привычек</h3>
         <div id="settings-list-container"></div>
         <div class="divider"></div>
         <button id="btn-back-to-tracker" class="outline" style="border-color: var(--hint); color: var(--hint); margin-top: 10px;">← Назад к таймерам</button>
@@ -387,7 +393,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         (function() {
-            console.log('🚀 Запуск трекера v8.1');
+            console.log('🚀 Запуск трекера v8.2');
 
             // Telegram
             const tg = window.Telegram?.WebApp;
@@ -424,7 +430,6 @@
             const customInput = $('custom-input');
             const setupCustomBlock = $('setup-custom-block');
             const setupNameInput = $('setup-name-input');
-            const setupIconInput = $('setup-icon-input');
             const emojiPicker = $('emoji-picker');
             const habitLabel = $('habit-label');
             const lastUseDatetime = $('last-use-datetime');
@@ -450,6 +455,7 @@
             let fromSettings = false;
             let editingHabitId = null;
             let pendingResetId = null;
+            let selectedEmoji = '🎯'; // текущая выбранная иконка в кастомном режиме
 
             const defaultEmojis = ['🚬', '💨', '🍺', '🍷', '🎮', '📱', '🍔', '💊', '🎯', '🏃', '📚', '💤'];
 
@@ -464,7 +470,6 @@
                     case 'tracker': screenTracker.classList.add('active'); break;
                     case 'settings': screenSettings.classList.add('active'); break;
                 }
-                // BackButton
                 if (tg?.BackButton) {
                     if (name === 'setup' || name === 'settings') {
                         tg.BackButton.show();
@@ -481,7 +486,7 @@
 
             function goToTracker() {
                 renderHabits();
-                updateAllTimers();
+                updateAllTimers(); // первый расчет экономии
                 showScreen('tracker');
             }
 
@@ -511,24 +516,21 @@
                 loadApp();
             }
 
-            // ========== Эмодзи пикер ==========
-            function renderEmojiPicker(selected = '') {
+            // ========== Эмодзи пикер (без поля ввода) ==========
+            function renderEmojiPicker(selected = '🎯') {
+                selectedEmoji = selected;
                 emojiPicker.innerHTML = '';
                 defaultEmojis.forEach(emoji => {
                     const span = document.createElement('span');
                     span.className = 'emoji-option' + (emoji === selected ? ' selected' : '');
                     span.textContent = emoji;
                     span.addEventListener('click', () => {
-                        setupIconInput.value = emoji;
+                        selectedEmoji = emoji;
                         renderEmojiPicker(emoji);
                     });
                     emojiPicker.appendChild(span);
                 });
             }
-
-            setupIconInput.addEventListener('input', () => {
-                renderEmojiPicker(setupIconInput.value.trim());
-            });
 
             // ========== Подготовка экрана добавления ==========
             function setDefaultDateTime() {
@@ -545,7 +547,6 @@
 
             function clearSetupFields() {
                 setupNameInput.value = '';
-                setupIconInput.value = '';
                 dailyCostInput.value = '0';
                 cigPerDayInput.value = '';
                 cigPackCostInput.value = '';
@@ -555,7 +556,8 @@
                 $('cost-block').style.display = 'block';
                 habitLabel.style.display = 'none';
                 setupCustomBlock.style.display = 'none';
-                renderEmojiPicker('');
+                selectedEmoji = '🎯';
+                renderEmojiPicker('🎯');
             }
 
             function selectHabit(type) {
@@ -616,10 +618,10 @@
                 $('cigarettes-cost-fields').style.display = 'none';
                 $('vape-cost-fields').style.display = 'none';
                 setupNameInput.value = habit.name;
-                setupIconInput.value = habit.icon;
+                selectedEmoji = habit.icon;
+                renderEmojiPicker(habit.icon);
                 dailyCostInput.value = habit.costPerDay || 0;
                 fillDateTime(habit.startTime);
-                renderEmojiPicker(habit.icon);
                 setupSaveBtn.textContent = '💾 Сохранить';
                 setupBackBtn.onclick = () => { showScreen('settings'); renderSettingsList(); };
                 showScreen('setup');
@@ -640,10 +642,11 @@
                 clearSetupFields();
                 setupCustomBlock.style.display = 'block';
                 setupNameInput.value = val;
+                selectedEmoji = '🎯';
+                renderEmojiPicker('🎯');
                 $('cost-block').style.display = 'block';
                 $('cigarettes-cost-fields').style.display = 'none';
                 $('vape-cost-fields').style.display = 'none';
-                renderEmojiPicker('🎯');
                 setupSaveBtn.textContent = '➕ Добавить привычку';
                 setupBackBtn.onclick = () => goToWelcome();
                 showScreen('setup');
@@ -659,7 +662,7 @@
                 if (editingHabitId) {
                     name = setupNameInput.value.trim();
                     if (!name) return alert('Введи название');
-                    icon = setupIconInput.value.trim() || '🎯';
+                    icon = selectedEmoji || '🎯';
                     costPerDay = parseFloat(dailyCostInput.value) || 0;
                 } else if (currentSetupHabit?.type === 'cigarettes') {
                     name = 'Сигареты';
@@ -675,7 +678,7 @@
                 } else {
                     name = setupNameInput.value.trim();
                     if (!name) return alert('Введи название привычки');
-                    icon = setupIconInput.value.trim() || '🎯';
+                    icon = selectedEmoji || '🎯';
                     costPerDay = parseFloat(dailyCostInput.value) || 0;
                 }
 
@@ -708,6 +711,7 @@
                         habit.startTime = Date.now();
                         saveHabits();
                         renderHabits();
+                        updateAllTimers(); // пересчитаем экономию после сброса
                     }
                     pendingResetId = null;
                 }
@@ -726,6 +730,7 @@
                 saveHabits();
                 renderSettingsList();
                 renderHabits();
+                updateAllTimers();
                 if (habits.length === 0) {
                     clearInterval(timerInterval);
                     timerInterval = null;
@@ -754,20 +759,19 @@
 
             function renderHabits() {
                 if (habits.length === 0) {
-                    habitsContainer.innerHTML = '<p style="margin-top:20px;">У тебя пока нет привычек. Добавь их в настройках!</p>';
+                    habitsContainer.innerHTML = '<p style="margin-top:20px; font-size:14px;">У тебя пока нет привычек. Добавь их в настройках!</p>';
                     totalMoneyEl.textContent = '';
                     timerElements = [];
                     return;
                 }
                 habitsContainer.innerHTML = '';
                 timerElements = [];
-                let totalSavings = 0;
+                // totalMoney будем считать в updateAllTimers, здесь не нужно
 
                 habits.forEach(h => {
                     const diff = Math.max(0, Date.now() - h.startTime);
                     const days = Math.floor(diff / 86400);
                     const moneySaved = (h.costPerDay || 0) * days;
-                    totalSavings += moneySaved;
                     const achievement = getAchievement(days);
 
                     const card = document.createElement('div');
@@ -815,15 +819,13 @@
                     card.appendChild(resetBtn);
 
                     habitsContainer.appendChild(card);
-                    timerElements.push({ element: timerDiv, id: h.id });
+                    timerElements.push({ element: timerDiv, id: h.id, moneyDiv: null }); // moneyDiv можно добавить при желании, но пока не нужно
                 });
-
-                totalMoneyEl.textContent = totalSavings > 0 ? `Общая экономия: ≈ ${Math.round(totalSavings)} ₽` : '';
             }
 
             function renderSettingsList() {
                 if (habits.length === 0) {
-                    settingsListContainer.innerHTML = '<p style="margin-top:10px;">Список пуст.</p>';
+                    settingsListContainer.innerHTML = '<p style="margin-top:10px; font-size:14px;">Список пуст.</p>';
                     return;
                 }
                 settingsListContainer.innerHTML = '';
@@ -849,21 +851,30 @@
                 });
             }
 
-            // ========== Открытие настроек (исправлено) ==========
+            // ========== Открытие настроек ==========
             function showSettings() {
                 console.log('⚙️ showSettings вызвана');
                 renderSettingsList();
                 showScreen('settings');
             }
 
+            // ========== Обновление таймеров И ОБЩЕЙ ЭКОНОМИИ в реальном времени ==========
             function updateAllTimers() {
+                let totalSavings = 0;
                 timerElements.forEach(({ element, id }) => {
                     const habit = habits.find(h => h.id == id);
                     if (habit) {
                         const diff = Math.max(0, Date.now() - habit.startTime);
                         element.textContent = formatTimeDiff(diff);
+                        // считаем экономию
+                        const days = diff / 86400000; // миллисекунды в дни
+                        totalSavings += (habit.costPerDay || 0) * days;
                     }
                 });
+                // Обновляем общую сумму
+                if (totalMoneyEl) {
+                    totalMoneyEl.textContent = totalSavings > 0 ? `Общая экономия: ≈ ${Math.round(totalSavings)} ₽` : '';
+                }
             }
 
             function saveHabits() {
@@ -888,7 +899,7 @@
                 }
             }
 
-            // ========== Привязка кнопок (вместо onclick) ==========
+            // ========== Привязка кнопок ==========
             document.getElementById('btn-save-name').addEventListener('click', saveName);
             document.getElementById('btn-cigarettes').addEventListener('click', () => selectHabit('cigarettes'));
             document.getElementById('btn-vape').addEventListener('click', () => selectHabit('vape'));
@@ -910,15 +921,14 @@
                 $('name-input').focus();
             }
 
-            // Таймер
+            // Таймер обновления
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if (screenTracker.classList.contains('active')) {
-                    updateAllTimers();
+                    updateAllTimers(); // теперь обновляет и таймеры, и экономию
                 }
             }, 1000);
 
-            // visualViewport
             window.visualViewport?.addEventListener('resize', () => {
                 document.body.style.height = window.visualViewport.height + 'px';
             });
