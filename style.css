@@ -53,7 +53,8 @@ body{
 
     background:var(--bg);
 
-    color:var(--text);
+    color: var(--tg-theme-text-color, var(--text)); 
+    background: var(--tg-theme-bg-color, var(--bg));
 
     min-height:100vh;
 
