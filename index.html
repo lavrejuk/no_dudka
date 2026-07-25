@@ -1,83 +1,623 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Трекер привычек</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<title>NO DUDKA</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css?v=2">
+
 </head>
+
 <body>
+
 <div id="confirm-modal" class="modal-overlay" style="display:none;">
-  <div class="modal-box">
-    <p>⚠️ Ты уверен?<br>Таймер обнулится.</p>
-    <button id="confirm-yes" class="danger">Да, уверен</button>
-    <button id="confirm-no" class="outline">Нет</button>
-  </div>
+
+<div class="modal-box">
+
+<h3>⚠ Подтверждение</h3>
+
+<p>
+
+Ты действительно хочешь сбросить таймер?
+
+</p>
+
+<button id="confirm-yes" class="danger">
+
+Да, сбросить
+
+</button>
+
+<button id="confirm-no" class="outline">
+
+Отмена
+
+</button>
+
 </div>
-<div id="screen-welcome" class="screen active">
-  <span class="icon">🔥</span>
-  <h2 id="welcome-title">Привет!</h2>
-  <p>Выбери привычку, от которой хочешь отказаться:</p>
-  <button id="btn-cigarettes">🚬 Сигареты</button>
-  <button id="btn-vape">💨 Вейп</button>
-  <div class="divider"></div>
-  <button id="btn-custom" class="outline">✏️ Своя привычка</button>
-  <div id="custom-block" style="display:none;">
-    <input type="text" id="custom-input" placeholder="Введи свою привычку" maxlength="30">
-    <button id="btn-confirm-custom">Далее</button>
-  </div>
+
 </div>
-<div id="screen-setup" class="screen">
-  <span class="icon">⚙️</span>
-  <h2 id="setup-title">Добавление</h2>
-  <p id="habit-label" style="display:none;"></p>
-  <div id="setup-custom-block" style="display:none;">
-    <label>Название привычки:</label>
-    <input type="text" id="setup-name-input" placeholder="Название" maxlength="30">
-    <label>Выбери иконку:</label>
-    <div class="emoji-picker" id="emoji-picker"></div>
-  </div>
-  <label>Дата и время последнего использования:</label>
-  <input type="datetime-local" id="last-use-datetime">
-  <div id="cost-block">
-    <label>Стоимость в день (₽):</label>
-    <input type="number" id="daily-cost-input" placeholder="Сколько экономишь в день" min="0" step="0.01" value="0">
-  </div>
-  <div id="cigarettes-cost-fields" style="display:none;">
-    <label>Сигарет в день (шт):</label>
-    <input type="number" id="cig-per-day-input" placeholder="Например 10" min="0" step="1">
-    <label>Стоимость одной пачки (₽):</label>
-    <input type="number" id="cig-pack-cost-input" placeholder="Например 200" min="0" step="1">
-  </div>
-  <div id="vape-cost-fields" style="display:none;">
-    <label>Сколько тратишь в месяц на вейп (₽):</label>
-    <input type="number" id="vape-monthly-cost-input" placeholder="Например 2500" min="0" step="1">
-  </div>
-  <button id="setup-save-btn">➕ Добавить привычку</button>
-  <button id="setup-back-btn" class="outline muted" style="margin-top:10px;">← Назад</button>
+
+
+
+<!-- ================================================= -->
+
+<!-- ПРИВЕТСТВИЕ -->
+
+<!-- ================================================= -->
+
+<section id="screen-welcome" class="screen active">
+
+<div class="hero">
+
+<div class="hero-logo">
+
+🔥
+
 </div>
-<div id="screen-tracker" class="screen">
-  <span class="icon">💪</span>
-  <h2 id="tracker-title">Твои привычки</h2>
-  <div id="habits-container"></div>
-  <div id="total-money" class="money" style="margin-top:12px;font-weight:600;font-size:15px;"></div>
-  <div class="divider"></div>
-  <button id="btn-open-settings" class="outline muted">⚙️ Настройки</button>
+
+<h1>
+
+NO DUDKA
+
+</h1>
+
+<p class="hero-sub">
+
+Освобождайся от вредных привычек
+
+каждый день.
+
+</p>
+
 </div>
-<div id="screen-settings" class="screen">
-  <span class="icon">⚙️</span>
-  <h2>Настройки</h2>
-  <p>Управление привычками</p>
-  <button id="btn-add-from-settings">➕ Добавить привычку</button>
-  <div class="divider"></div>
-  <h3 style="font-size:16px;margin-top:10px;">Список привычек</h3>
-  <div id="settings-list-container"></div>
-  <div class="divider"></div>
-  <button id="btn-back-to-tracker" class="outline muted" style="margin-top:10px;">← Назад к таймерам</button>
-  <button id="btn-factory-reset" class="danger" style="margin-top:20px;">⚠️ Сбросить всё</button>
+
+
+
+<div class="welcome-card">
+
+<h2>
+
+Что хочешь бросить?
+
+</h2>
+
+<button id="btn-cigarettes">
+
+🚬 Сигареты
+
+</button>
+
+<button id="btn-vape">
+
+💨 Вейп
+
+</button>
+
+<button id="btn-custom" class="outline">
+
+➕ Своя привычка
+
+</button>
+
+<div id="custom-block" style="display:none;">
+
+<input
+id="custom-input"
+type="text"
+maxlength="30"
+placeholder="Название привычки">
+
+<button id="btn-confirm-custom">
+
+Продолжить
+
+</button>
+
 </div>
+
+</div>
+
+</section>
+
+
+
+<!-- ================================================= -->
+
+<!-- ДОБАВЛЕНИЕ -->
+
+<!-- ================================================= -->
+
+<section id="screen-setup" class="screen">
+
+<div class="page-header">
+
+<h1>
+
+Новая привычка
+
+</h1>
+
+<p>
+
+Заполни информацию
+
+</p>
+
+</div>
+
+<div class="form-card">
+
+<p id="habit-label" style="display:none;"></p>
+
+<div id="setup-custom-block" style="display:none;">
+
+<label>
+
+Название привычки
+
+</label>
+
+<input
+id="setup-name-input"
+type="text"
+maxlength="30"
+placeholder="Например кофе">
+
+<label>
+
+Иконка
+
+</label>
+
+<div
+id="emoji-picker"
+class="emoji-picker">
+
+</div>
+
+</div>
+
+<label>
+
+Последнее использование
+
+</label>
+
+<input
+id="last-use-datetime"
+type="datetime-local">
+
+<div id="cost-block">
+
+<label>
+
+Стоимость в день
+
+</label>
+
+<input
+id="daily-cost-input"
+type="number"
+min="0"
+step="0.01"
+placeholder="0">
+
+</div>
+
+<div id="cigarettes-cost-fields" style="display:none;">
+
+<label>
+
+Сигарет в день
+
+</label>
+
+<input
+id="cig-per-day-input"
+type="number">
+
+<label>
+
+Цена пачки
+
+</label>
+
+<input
+id="cig-pack-cost-input"
+type="number">
+
+</div>
+
+<div id="vape-cost-fields" style="display:none;">
+
+<label>
+
+Траты в месяц
+
+</label>
+
+<input
+id="vape-monthly-cost-input"
+type="number">
+
+</div>
+
+<button id="setup-save-btn">
+
+Добавить привычку
+
+</button>
+
+<button
+id="setup-back-btn"
+class="outline">
+
+Назад
+
+</button>
+
+</div>
+
+</section>
+
+</section>
+
+<!-- ================================================= -->
+<!-- ГЛАВНЫЙ ЭКРАН -->
+<!-- ================================================= -->
+
+<section id="screen-tracker" class="screen">
+
+
+<div class="dashboard-header">
+
+    <div>
+        <h1>
+            NO DUDKA
+        </h1>
+
+        <p>
+            Твой путь к свободе
+        </p>
+    </div>
+
+
+    <div class="dashboard-fire">
+        🔥
+    </div>
+
+</div>
+
+
+
+<!-- Общий прогресс -->
+
+<div class="summary-card">
+
+
+    <div class="summary-icon">
+        🏆
+    </div>
+
+
+    <div>
+
+        <div class="summary-title">
+            Общий прогресс
+        </div>
+
+
+        <div id="total-money" class="summary-money">
+            0 ₽
+        </div>
+
+
+        <div class="summary-description">
+            Уже удалось сохранить
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<!-- Восстановление -->
+
+<div class="health-card">
+
+
+    <div class="health-header">
+
+        <span>
+            ❤️ Восстановление организма
+        </span>
+
+        <span id="health-percent">
+            0%
+        </span>
+
+    </div>
+
+
+
+    <div class="progress-bar">
+
+        <div 
+        id="health-progress"
+        class="progress-fill">
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+
+<!-- Контейнер привычек -->
+
+<div id="habits-container">
+
+
+</div>
+
+
+
+
+<!-- Старый счетчик оставляем для совместимости -->
+
+<div id="total-money-old" 
+class="money"
+style="display:none;">
+
+</div>
+
+
+
+<!-- Статистика -->
+
+<div class="stats-grid">
+
+
+<div class="stat-card">
+
+
+<div class="stat-number"
+id="days-stat">
+
+0
+
+</div>
+
+
+<div class="stat-label">
+
+Дней
+
+</div>
+
+
+</div>
+
+
+
+<div class="stat-card">
+
+
+<div class="stat-number"
+id="money-stat">
+
+0 ₽
+
+</div>
+
+
+<div class="stat-label">
+
+Сэкономлено
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="stat-card">
+
+
+<div class="stat-number"
+id="health-stat">
+
+0%
+
+</div>
+
+
+<div class="stat-label">
+
+Здоровье
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<button 
+id="btn-open-settings"
+class="outline">
+
+⚙️ Настройки
+
+</button>
+
+
+</section>
+
+<!-- ================================================= -->
+<!-- НАСТРОЙКИ -->
+<!-- ================================================= -->
+
+
+<section id="screen-settings" class="screen">
+
+
+<div class="page-header">
+
+<h1>
+⚙️ Настройки
+</h1>
+
+<p>
+Управление привычками
+</p>
+
+</div>
+
+
+
+<div class="settings-card">
+
+
+<button id="btn-add-from-settings">
+
+➕ Добавить привычку
+
+</button>
+
+
+
+</div>
+
+
+
+<h3 class="section-title">
+
+Твои привычки
+
+</h3>
+
+
+
+<div id="settings-list-container">
+
+
+</div>
+
+
+
+
+<button 
+id="btn-back-to-tracker"
+class="outline">
+
+← Назад
+
+</button>
+
+
+
+<button 
+id="btn-factory-reset"
+class="danger">
+
+⚠️ Сбросить всё
+
+</button>
+
+
+
+</section>
+
+<!-- ================================================= -->
+<!-- НИЖНЕЕ МЕНЮ -->
+<!-- ================================================= -->
+
+
+<nav class="bottom-nav">
+
+
+<button class="nav-item active">
+
+🏠
+
+<span>
+Главная
+</span>
+
+</button>
+
+
+
+<button class="nav-item">
+
+📈
+
+<span>
+Статистика
+</span>
+
+</button>
+
+
+
+<button class="nav-item">
+
+🏆
+
+<span>
+Достижения
+</span>
+
+</button>
+
+
+
+<button class="nav-item">
+
+⚙️
+
+<span>
+Настройки
+</span>
+
+</button>
+
+
+</nav>
+
+
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="app.js?v=1"></script>
+
+<script src="app.js?v=2"></script>
+
+
 </body>
+
 </html>
