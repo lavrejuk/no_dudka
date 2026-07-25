@@ -1,68 +1,35 @@
-:root {
-    --bg: #ffffff;
-    --text: #000000;
-    --hint: #999999;
-    --button: #3390ec;
-    --button-text: #ffffff;
-    --secondary-bg: #f0f0f0;
-    --danger: #e53935;
-    --success: #4caf50;
-}
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #1e1e1e;
-        --text: #ffffff;
-        --hint: #aaaaaa;
-        --secondary-bg: #2c2c2c;
-        --danger: #ef5350;
-    }
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg); color: var(--text);
-    padding: 16px; min-height: 100vh; min-height: -webkit-fill-available;
-    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    transition: background 0.3s, color 0.3s; font-size: 14px;
-}
-.screen { display: none; width: 100%; max-width: 400px; text-align: center; padding: 20px 0; }
-.screen.active { display: block; }
-h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-p { font-size: 14px; font-weight: 400; margin-bottom: 16px; color: var(--hint); }
-button {
-    background: var(--button); color: var(--button-text); border: none;
-    padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 600;
-    margin: 6px 0; cursor: pointer; width: 100%; max-width: 320px;
-    transition: opacity 0.2s; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation; font-family: 'Montserrat', sans-serif;
-}
-button:active { opacity: 0.8; transform: scale(0.98); }
-button.danger { background: var(--danger); }
-button.outline { background: transparent; border: 2px solid var(--button); color: var(--button); }
-button.muted { border-color: var(--hint); color: var(--hint); }
-input, select {
-    padding: 10px 12px; border-radius: 10px; border: 1px solid var(--hint);
-    background: var(--secondary-bg); color: var(--text); width: 100%; max-width: 320px;
-    margin: 8px 0; font-size: 14px; font-family: 'Montserrat', sans-serif;
-}
-label { display: block; text-align: left; max-width: 320px; margin: 12px auto 4px; font-size: 13px; font-weight: 500; color: var(--hint); }
-.timer { font-size: 2em; font-weight: bold; margin: 10px 0; word-break: break-all; font-variant-numeric: tabular-nums; }
-.habit-name { font-size: 1.1em; font-weight: 600; margin-bottom: 5px; }
-.icon { font-size: 40px; display: block; margin-bottom: 10px; }
-.divider { width: 60px; height: 3px; background: var(--button); border-radius: 2px; margin: 20px auto; }
-.habit-card { background: var(--secondary-bg); border-radius: 16px; padding: 16px; margin-bottom: 16px; width: 100%; max-width: 320px; position: relative; }
-.habit-card .timer { font-size: 1.8em; }
-.settings-list-item { display: flex; justify-content: space-between; align-items: center; background: var(--secondary-bg); padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; width: 100%; max-width: 320px; font-size: 14px; }
-.settings-list-item .btn-group { display: flex; gap: 8px; }
-.settings-list-item button { background: var(--button); color: var(--button-text); border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; width: auto; margin: 0; }
-.settings-list-item .del-btn { background: var(--danger); }
-.reset-btn { background: var(--danger); margin-top: 8px; font-size: 13px; padding: 10px 16px; }
-.achievement { font-size: 12px; margin: 4px 0; color: var(--hint); }
-.money { font-size: 13px; color: var(--success); margin: 4px 0; }
-.emoji-picker { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0; max-width: 320px; }
-.emoji-option { font-size: 28px; padding: 8px; border-radius: 50%; cursor: pointer; background: var(--secondary-bg); border: 2px solid transparent; transition: 0.2s; line-height: 1; }
-.emoji-option.selected { border-color: var(--button); }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-box { background: var(--bg); color: var(--text); border-radius: 20px; padding: 24px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-size: 14px; }
-.modal-box p { margin-bottom: 20px; font-weight: 600; color: var(--text); font-size: 15px; }
-.modal-box button { margin: 6px; font-size: 14px; }
+:root{--bg:#fff;--text:#000;--hint:#999;--button:#3390ec;--button-text:#fff;--secondary-bg:#f0f0f0;--danger:#e53935;--success:#4caf50}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1e1e;--text:#fff;--hint:#aaa;--secondary-bg:#2c2c2c;--danger:#ef5350}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',-apple-system,sans-serif;background:var(--bg);color:var(--text);padding:16px;min-height:100vh;display:flex;flex-direction:column;align-items:center;font-size:14px}
+.screen{display:none;width:100%;max-width:400px;text-align:center;padding:20px 0}
+.screen.active{display:block}
+h2{font-size:20px;font-weight:700;margin-bottom:8px}
+p{font-size:14px;margin-bottom:16px;color:var(--hint)}
+button{background:var(--button);color:var(--button-text);border:none;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;margin:6px 0;cursor:pointer;width:100%;max-width:320px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:'Montserrat',sans-serif}
+button:active{opacity:.8;transform:scale(.98)}
+button.danger{background:var(--danger)}
+button.outline{background:transparent;border:2px solid var(--button);color:var(--button)}
+button.muted{border-color:var(--hint);color:var(--hint)}
+input{padding:10px 12px;border-radius:10px;border:1px solid var(--hint);background:var(--secondary-bg);color:var(--text);width:100%;max-width:320px;margin:8px 0;font-size:14px;font-family:'Montserrat',sans-serif}
+label{display:block;text-align:left;max-width:320px;margin:12px auto 4px;font-size:13px;font-weight:500;color:var(--hint)}
+.timer{font-size:2em;font-weight:bold;margin:10px 0;word-break:break-all;font-variant-numeric:tabular-nums}
+.habit-name{font-size:1.1em;font-weight:600;margin-bottom:5px}
+.icon{font-size:40px;display:block;margin-bottom:10px}
+.divider{width:60px;height:3px;background:var(--button);border-radius:2px;margin:20px auto}
+.habit-card{background:var(--secondary-bg);border-radius:16px;padding:16px;margin-bottom:16px;width:100%;max-width:320px}
+.habit-card .timer{font-size:1.8em}
+.settings-list-item{display:flex;justify-content:space-between;align-items:center;background:var(--secondary-bg);padding:12px 16px;border-radius:10px;margin-bottom:8px;width:100%;max-width:320px;font-size:14px}
+.settings-list-item .btn-group{display:flex;gap:8px}
+.settings-list-item button{background:var(--button);border-radius:8px;padding:6px 12px;font-size:13px;width:auto;margin:0}
+.settings-list-item .del-btn{background:var(--danger)}
+.reset-btn{background:var(--danger);margin-top:8px;font-size:13px;padding:10px 16px}
+.achievement{font-size:12px;margin:4px 0;color:var(--hint)}
+.money{font-size:13px;color:var(--success);margin:4px 0}
+.emoji-picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0;max-width:320px}
+.emoji-option{font-size:28px;padding:8px;border-radius:50%;cursor:pointer;background:var(--secondary-bg);border:2px solid transparent;line-height:1}
+.emoji-option.selected{border-color:var(--button)}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal-box{background:var(--bg);color:var(--text);border-radius:20px;padding:24px;width:90%;max-width:320px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.modal-box p{margin-bottom:20px;font-weight:600;color:var(--text);font-size:15px}
+.modal-box button{margin:6px}
