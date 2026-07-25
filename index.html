@@ -1,92 +1,83 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Трекер привычек v10</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Трекер привычек</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1">
 </head>
 <body>
-    <div id="confirm-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-box">
-            <p>⚠️ Ты уверен?<br>Таймер обнулится.</p>
-            <button id="confirm-yes" class="danger">Да, уверен</button>
-            <button id="confirm-no" class="outline">Нет</button>
-        </div>
-    </div>
-    <div id="screen-loading" class="screen active">
-        <span class="icon">⏳</span>
-        <h2>Загрузка...</h2>
-    </div>
-    <div id="screen-welcome" class="screen">
-        <span class="icon">🔥</span>
-        <h2 id="welcome-title">Привет!</h2>
-        <p>Выбери привычку, от которой хочешь отказаться:</p>
-        <button id="btn-cigarettes">🚬 Сигареты</button>
-        <button id="btn-vape">💨 Вейп</button>
-        <div class="divider"></div>
-        <button id="btn-custom" class="outline">✏️ Своя привычка</button>
-        <div id="custom-block" style="display:none;">
-            <input type="text" id="custom-input" placeholder="Введи свою привычку" maxlength="30">
-            <button id="btn-confirm-custom">Далее</button>
-        </div>
-    </div>
-    <div id="screen-setup" class="screen">
-        <span class="icon">⚙️</span>
-        <h2 id="setup-title">Добавление</h2>
-        <p id="habit-label" style="display:none;"></p>
-        <div id="setup-custom-block" style="display:none;">
-            <label>Название привычки:</label>
-            <input type="text" id="setup-name-input" placeholder="Название" maxlength="30">
-            <label>Выбери иконку:</label>
-            <div class="emoji-picker" id="emoji-picker"></div>
-        </div>
-        <label>Дата и время последнего использования:</label>
-        <input type="datetime-local" id="last-use-datetime">
-        <div id="cost-block">
-            <label>Стоимость в день (₽):</label>
-            <input type="number" id="daily-cost-input" placeholder="Сколько экономишь в день" min="0" step="0.01" value="0">
-        </div>
-        <div id="cigarettes-cost-fields" style="display:none;">
-            <label>Сигарет в день (шт):</label>
-            <input type="number" id="cig-per-day-input" placeholder="Например 10" min="0" step="1">
-            <label>Стоимость одной пачки (₽):</label>
-            <input type="number" id="cig-pack-cost-input" placeholder="Например 200" min="0" step="1">
-        </div>
-        <div id="vape-cost-fields" style="display:none;">
-            <label>Сколько тратишь в месяц на вейп (₽):</label>
-            <input type="number" id="vape-monthly-cost-input" placeholder="Например 2500" min="0" step="1">
-        </div>
-        <button id="setup-save-btn">➕ Добавить привычку</button>
-        <button id="setup-back-btn" class="outline muted" style="margin-top:10px;">← Назад</button>
-    </div>
-    <div id="screen-tracker" class="screen">
-        <span class="icon">💪</span>
-        <h2 id="tracker-title">Твои привычки</h2>
-        <div id="habits-container"></div>
-        <div id="total-money" class="money" style="margin-top:12px; font-weight:600; font-size:15px;"></div>
-        <div class="divider"></div>
-        <button id="btn-open-settings" class="outline muted">⚙️ Настройки</button>
-    </div>
-    <div id="screen-settings" class="screen">
-        <span class="icon">⚙️</span>
-        <h2>Настройки</h2>
-        <p>Управление привычками</p>
-        <button id="btn-add-from-settings">➕ Добавить привычку</button>
-        <div class="divider"></div>
-        <h3 style="font-size:16px; margin-top:10px;">Список привычек</h3>
-        <div id="settings-list-container"></div>
-        <div class="divider"></div>
-        <button id="btn-back-to-tracker" class="outline muted" style="margin-top:10px;">← Назад к таймерам</button>
-        <button id="btn-factory-reset" class="danger" style="margin-top:20px;">⚠️ Сбросить всё</button>
-    </div>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="app.js"></script>
+<div id="confirm-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <p>⚠️ Ты уверен?<br>Таймер обнулится.</p>
+    <button id="confirm-yes" class="danger">Да, уверен</button>
+    <button id="confirm-no" class="outline">Нет</button>
+  </div>
+</div>
+<div id="screen-welcome" class="screen active">
+  <span class="icon">🔥</span>
+  <h2 id="welcome-title">Привет!</h2>
+  <p>Выбери привычку, от которой хочешь отказаться:</p>
+  <button id="btn-cigarettes">🚬 Сигареты</button>
+  <button id="btn-vape">💨 Вейп</button>
+  <div class="divider"></div>
+  <button id="btn-custom" class="outline">✏️ Своя привычка</button>
+  <div id="custom-block" style="display:none;">
+    <input type="text" id="custom-input" placeholder="Введи свою привычку" maxlength="30">
+    <button id="btn-confirm-custom">Далее</button>
+  </div>
+</div>
+<div id="screen-setup" class="screen">
+  <span class="icon">⚙️</span>
+  <h2 id="setup-title">Добавление</h2>
+  <p id="habit-label" style="display:none;"></p>
+  <div id="setup-custom-block" style="display:none;">
+    <label>Название привычки:</label>
+    <input type="text" id="setup-name-input" placeholder="Название" maxlength="30">
+    <label>Выбери иконку:</label>
+    <div class="emoji-picker" id="emoji-picker"></div>
+  </div>
+  <label>Дата и время последнего использования:</label>
+  <input type="datetime-local" id="last-use-datetime">
+  <div id="cost-block">
+    <label>Стоимость в день (₽):</label>
+    <input type="number" id="daily-cost-input" placeholder="Сколько экономишь в день" min="0" step="0.01" value="0">
+  </div>
+  <div id="cigarettes-cost-fields" style="display:none;">
+    <label>Сигарет в день (шт):</label>
+    <input type="number" id="cig-per-day-input" placeholder="Например 10" min="0" step="1">
+    <label>Стоимость одной пачки (₽):</label>
+    <input type="number" id="cig-pack-cost-input" placeholder="Например 200" min="0" step="1">
+  </div>
+  <div id="vape-cost-fields" style="display:none;">
+    <label>Сколько тратишь в месяц на вейп (₽):</label>
+    <input type="number" id="vape-monthly-cost-input" placeholder="Например 2500" min="0" step="1">
+  </div>
+  <button id="setup-save-btn">➕ Добавить привычку</button>
+  <button id="setup-back-btn" class="outline muted" style="margin-top:10px;">← Назад</button>
+</div>
+<div id="screen-tracker" class="screen">
+  <span class="icon">💪</span>
+  <h2 id="tracker-title">Твои привычки</h2>
+  <div id="habits-container"></div>
+  <div id="total-money" class="money" style="margin-top:12px;font-weight:600;font-size:15px;"></div>
+  <div class="divider"></div>
+  <button id="btn-open-settings" class="outline muted">⚙️ Настройки</button>
+</div>
+<div id="screen-settings" class="screen">
+  <span class="icon">⚙️</span>
+  <h2>Настройки</h2>
+  <p>Управление привычками</p>
+  <button id="btn-add-from-settings">➕ Добавить привычку</button>
+  <div class="divider"></div>
+  <h3 style="font-size:16px;margin-top:10px;">Список привычек</h3>
+  <div id="settings-list-container"></div>
+  <div class="divider"></div>
+  <button id="btn-back-to-tracker" class="outline muted" style="margin-top:10px;">← Назад к таймерам</button>
+  <button id="btn-factory-reset" class="danger" style="margin-top:20px;">⚠️ Сбросить всё</button>
+</div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="app.js?v=1"></script>
 </body>
 </html>
