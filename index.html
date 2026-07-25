@@ -1,623 +1,565 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NO DUDKA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --card: #191c24;
+            --text: #ffffff;
+            --hint: #9ca3af;
+            --button: #4f8cff;
+            --button-hover: #6da3ff;
+            --border: #2c313d;
+            --shadow: 0 10px 35px rgba(0,0,0,.45);
+            --radius: 22px;
+        }
 
-<meta charset="UTF-8">
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f6f7fb;
+                --card: #ffffff;
+                --text: #111827;
+                --hint: #6b7280;
+            }
+        }
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 15px;
+            transition: .3s;
+        }
+        .screen { display: none; width: 100%; max-width: 420px; animation: fade .35s ease; }
+        .screen.active { display: block; }
+        @keyframes fade { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
 
-<title>NO DUDKA</title>
+        h2 { font-size:28px; font-weight:800; margin-bottom:10px; }
+        p { color:var(--hint); line-height:1.6; margin-bottom:20px; }
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
+        button {
+            width:100%; border:none; border-radius:18px; padding:15px 20px;
+            font-size:15px; font-weight:700; cursor:pointer;
+            transition:.25s; box-shadow:0 6px 20px rgba(59,130,246,.35);
+        }
+        button:hover { transform:translateY(-2px); }
+        button:active { transform:scale(.98); }
+        button.danger { background:#ef4444; box-shadow:0 6px 18px rgba(239,68,68,.35); }
+        button.outline {
+            background:transparent; color:var(--button); border:2px solid var(--button); box-shadow:none;
+        }
 
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        input {
+            width:100%; padding:15px 18px; border-radius:18px; border:2px solid var(--border);
+            background:var(--card); color:var(--text); margin-top:8px; font-size:15px;
+        }
+        input:focus { outline:none; border-color:var(--button); box-shadow:0 0 0 5px rgba(59,130,246,.15); }
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        .habit-card {
+            background:var(--card); border-radius:28px; padding:24px; box-shadow:var(--shadow);
+            margin-bottom:18px; border:1px solid var(--border); transition:.25s;
+        }
+        .habit-card:hover { transform:translateY(-3px); }
+        .icon { font-size:54px; margin-bottom:12px; }
+        .habit-name { font-size:20px; font-weight:700; margin-bottom:8px; }
+        .timer { font-size:42px; font-weight:800; margin:14px 0; letter-spacing:1px; }
+        .money { color:#22c55e; font-size:15px; font-weight:600; margin-top:6px; }
+        .achievement { color:var(--hint); font-size:13px; margin-top:8px; }
 
-<link rel="stylesheet" href="style.css?v=2">
+        .emoji-picker { display:flex; justify-content:center; flex-wrap:wrap; gap:14px; margin-top:16px; }
+        .emoji-option {
+            width:58px; height:58px; display:flex; justify-content:center; align-items:center;
+            border-radius:18px; background:var(--card); font-size:30px; cursor:pointer; transition:.2s;
+        }
+        .emoji-option.selected { border-color:var(--button); background:rgba(79,140,255,.15); }
 
+        .modal-overlay {
+            position:fixed; inset:0; display:flex; justify-content:center; align-items:center;
+            background:rgba(0,0,0,.55); backdrop-filter:blur(8px); z-index:999;
+        }
+        .modal-box {
+            background:var(--card); width:92%; max-width:340px; padding:28px; border-radius:28px;
+            box-shadow:0 25px 60px rgba(0,0,0,.35); animation:popup .25s ease;
+        }
+        @keyframes popup { from { transform:scale(.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+        /* Нижнее меню */
+        nav.bottom-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--card); border-radius: 9999px; padding: 8px; box-shadow: var(--shadow);
+            display: flex; gap: 8px; width: 92%; max-width: 420px;
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 12px 16px; border-radius: 9999px; font-size: 13px; color: var(--hint);
+        }
+        .nav-item.active { color: var(--button); background: rgba(79,140,255,.1); }
+    </style>
 </head>
-
 <body>
 
 <div id="confirm-modal" class="modal-overlay" style="display:none;">
-
-<div class="modal-box">
-
-<h3>⚠ Подтверждение</h3>
-
-<p>
-
-Ты действительно хочешь сбросить таймер?
-
-</p>
-
-<button id="confirm-yes" class="danger">
-
-Да, сбросить
-
-</button>
-
-<button id="confirm-no" class="outline">
-
-Отмена
-
-</button>
-
+    <div class="modal-box">
+        <h3>⚠️ Подтверждение</h3>
+        <p>Ты действительно хочешь сбросить таймер?</p>
+        <button id="confirm-yes" class="danger">Да, сбросить</button>
+        <button id="confirm-no" class="outline">Отмена</button>
+    </div>
 </div>
-
-</div>
-
-
-
-<!-- ================================================= -->
 
 <!-- ПРИВЕТСТВИЕ -->
-
-<!-- ================================================= -->
-
 <section id="screen-welcome" class="screen active">
-
-<div class="hero">
-
-<div class="hero-logo">
-
-🔥
-
-</div>
-
-<h1>
-
-NO DUDKA
-
-</h1>
-
-<p class="hero-sub">
-
-Освобождайся от вредных привычек
-
-каждый день.
-
-</p>
-
-</div>
-
-
-
-<div class="welcome-card">
-
-<h2>
-
-Что хочешь бросить?
-
-</h2>
-
-<button id="btn-cigarettes">
-
-🚬 Сигареты
-
-</button>
-
-<button id="btn-vape">
-
-💨 Вейп
-
-</button>
-
-<button id="btn-custom" class="outline">
-
-➕ Своя привычка
-
-</button>
-
-<div id="custom-block" style="display:none;">
-
-<input
-id="custom-input"
-type="text"
-maxlength="30"
-placeholder="Название привычки">
-
-<button id="btn-confirm-custom">
-
-Продолжить
-
-</button>
-
-</div>
-
-</div>
-
+    <div class="hero">
+        <div class="hero-logo">🔥</div>
+        <h1>NO DUDKA</h1>
+        <p class="hero-sub">Освобождайся от вредных привычек каждый день.</p>
+    </div>
+    <div class="welcome-card">
+        <h2>Что хочешь бросить?</h2>
+        <button id="btn-cigarettes">🚬 Сигареты</button>
+        <button id="btn-vape">💨 Вейп</button>
+        <button id="btn-custom" class="outline">➕ Своя привычка</button>
+        <div id="custom-block" style="display:none;">
+            <input id="custom-input" type="text" maxlength="30" placeholder="Название привычки">
+            <button id="btn-confirm-custom">Продолжить</button>
+        </div>
+    </div>
 </section>
-
-
-
-<!-- ================================================= -->
 
 <!-- ДОБАВЛЕНИЕ -->
-
-<!-- ================================================= -->
-
 <section id="screen-setup" class="screen">
-
-<div class="page-header">
-
-<h1>
-
-Новая привычка
-
-</h1>
-
-<p>
-
-Заполни информацию
-
-</p>
-
-</div>
-
-<div class="form-card">
-
-<p id="habit-label" style="display:none;"></p>
-
-<div id="setup-custom-block" style="display:none;">
-
-<label>
-
-Название привычки
-
-</label>
-
-<input
-id="setup-name-input"
-type="text"
-maxlength="30"
-placeholder="Например кофе">
-
-<label>
-
-Иконка
-
-</label>
-
-<div
-id="emoji-picker"
-class="emoji-picker">
-
-</div>
-
-</div>
-
-<label>
-
-Последнее использование
-
-</label>
-
-<input
-id="last-use-datetime"
-type="datetime-local">
-
-<div id="cost-block">
-
-<label>
-
-Стоимость в день
-
-</label>
-
-<input
-id="daily-cost-input"
-type="number"
-min="0"
-step="0.01"
-placeholder="0">
-
-</div>
-
-<div id="cigarettes-cost-fields" style="display:none;">
-
-<label>
-
-Сигарет в день
-
-</label>
-
-<input
-id="cig-per-day-input"
-type="number">
-
-<label>
-
-Цена пачки
-
-</label>
-
-<input
-id="cig-pack-cost-input"
-type="number">
-
-</div>
-
-<div id="vape-cost-fields" style="display:none;">
-
-<label>
-
-Траты в месяц
-
-</label>
-
-<input
-id="vape-monthly-cost-input"
-type="number">
-
-</div>
-
-<button id="setup-save-btn">
-
-Добавить привычку
-
-</button>
-
-<button
-id="setup-back-btn"
-class="outline">
-
-Назад
-
-</button>
-
-</div>
-
+    <div class="page-header">
+        <h1>Новая привычка</h1>
+        <p>Заполни информацию</p>
+    </div>
+    <div class="form-card">
+        <p id="habit-label" style="display:none;"></p>
+        <div id="setup-custom-block" style="display:none;">
+            <label>Название привычки</label>
+            <input id="setup-name-input" type="text" maxlength="30" placeholder="Например кофе">
+            <label>Иконка</label>
+            <div id="emoji-picker" class="emoji-picker"></div>
+        </div>
+        <label>Последнее использование</label>
+        <input id="last-use-datetime" type="datetime-local">
+        <div id="cost-block">
+            <label>Стоимость в день</label>
+            <input id="daily-cost-input" type="number" min="0" step="0.01" placeholder="0">
+        </div>
+        <div id="cigarettes-cost-fields" style="display:none;">
+            <label>Сигарет в день</label>
+            <input id="cig-per-day-input" type="number">
+            <label>Цена пачки</label>
+            <input id="cig-pack-cost-input" type="number">
+        </div>
+        <div id="vape-cost-fields" style="display:none;">
+            <label>Траты в месяц</label>
+            <input id="vape-monthly-cost-input" type="number">
+        </div>
+        <button id="setup-save-btn">➕ Добавить привычку</button>
+        <button id="setup-back-btn" class="outline">Назад</button>
+    </div>
 </section>
 
-</section>
-
-<!-- ================================================= -->
 <!-- ГЛАВНЫЙ ЭКРАН -->
-<!-- ================================================= -->
-
 <section id="screen-tracker" class="screen">
-
-
-<div class="dashboard-header">
-
-    <div>
-        <h1>
-            NO DUDKA
-        </h1>
-
-        <p>
-            Твой путь к свободе
-        </p>
+    <div class="dashboard-header">
+        <div><h1>NO DUDKA</h1><p>Твой путь к свободе</p></div>
+        <div class="dashboard-fire">🔥</div>
     </div>
 
-
-    <div class="dashboard-fire">
-        🔥
+    <div class="summary-card">
+        <div class="summary-icon">🏆</div>
+        <div><div class="summary-title">Общий прогресс</div><div id="total-money" class="summary-money">0 ₽</div><div class="summary-description">Уже удалось сохранить</div></div>
     </div>
 
-</div>
-
-
-
-<!-- Общий прогресс -->
-
-<div class="summary-card">
-
-
-    <div class="summary-icon">
-        🏆
+    <div class="health-card">
+        <div class="health-header"><span>❤️ Восстановление организма</span><span id="health-percent">0%</span></div>
+        <div class="progress-bar"><div id="health-progress" class="progress-fill"></div></div>
     </div>
 
+    <div id="habits-container"></div>
+    <div id="total-money-old" class="money" style="display:none;"></div>
 
-    <div>
-
-        <div class="summary-title">
-            Общий прогресс
-        </div>
-
-
-        <div id="total-money" class="summary-money">
-            0 ₽
-        </div>
-
-
-        <div class="summary-description">
-            Уже удалось сохранить
-        </div>
-
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-number" id="days-stat">0</div><div class="stat-label">Дней</div></div>
+        <div class="stat-card"><div class="stat-number" id="money-stat">0 ₽</div><div class="stat-label">Сэкономлено</div></div>
+        <div class="stat-card"><div class="stat-number" id="health-stat">0%</div><div class="stat-label">Здоровье</div></div>
     </div>
 
-
-</div>
-
-
-
-<!-- Восстановление -->
-
-<div class="health-card">
-
-
-    <div class="health-header">
-
-        <span>
-            ❤️ Восстановление организма
-        </span>
-
-        <span id="health-percent">
-            0%
-        </span>
-
-    </div>
-
-
-
-    <div class="progress-bar">
-
-        <div 
-        id="health-progress"
-        class="progress-fill">
-
-        </div>
-
-    </div>
-
-
-</div>
-
-
-
-
-<!-- Контейнер привычек -->
-
-<div id="habits-container">
-
-
-</div>
-
-
-
-
-<!-- Старый счетчик оставляем для совместимости -->
-
-<div id="total-money-old" 
-class="money"
-style="display:none;">
-
-</div>
-
-
-
-<!-- Статистика -->
-
-<div class="stats-grid">
-
-
-<div class="stat-card">
-
-
-<div class="stat-number"
-id="days-stat">
-
-0
-
-</div>
-
-
-<div class="stat-label">
-
-Дней
-
-</div>
-
-
-</div>
-
-
-
-<div class="stat-card">
-
-
-<div class="stat-number"
-id="money-stat">
-
-0 ₽
-
-</div>
-
-
-<div class="stat-label">
-
-Сэкономлено
-
-</div>
-
-
-</div>
-
-
-
-
-<div class="stat-card">
-
-
-<div class="stat-number"
-id="health-stat">
-
-0%
-
-</div>
-
-
-<div class="stat-label">
-
-Здоровье
-
-</div>
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-<button 
-id="btn-open-settings"
-class="outline">
-
-⚙️ Настройки
-
-</button>
-
-
+    <button id="btn-open-settings" class="outline">⚙️ Настройки</button>
 </section>
 
-<!-- ================================================= -->
 <!-- НАСТРОЙКИ -->
-<!-- ================================================= -->
-
-
 <section id="screen-settings" class="screen">
-
-
-<div class="page-header">
-
-<h1>
-⚙️ Настройки
-</h1>
-
-<p>
-Управление привычками
-</p>
-
-</div>
-
-
-
-<div class="settings-card">
-
-
-<button id="btn-add-from-settings">
-
-➕ Добавить привычку
-
-</button>
-
-
-
-</div>
-
-
-
-<h3 class="section-title">
-
-Твои привычки
-
-</h3>
-
-
-
-<div id="settings-list-container">
-
-
-</div>
-
-
-
-
-<button 
-id="btn-back-to-tracker"
-class="outline">
-
-← Назад
-
-</button>
-
-
-
-<button 
-id="btn-factory-reset"
-class="danger">
-
-⚠️ Сбросить всё
-
-</button>
-
-
-
+    <div class="page-header"><h1>⚙️ Настройки</h1><p>Управление привычками</p></div>
+    <div class="settings-card"><button id="btn-add-from-settings">➕ Добавить привычку</button></div>
+    <h3 class="section-title">Твои привычки</h3>
+    <div id="settings-list-container"></div>
+    <button id="btn-back-to-tracker" class="outline">← Назад</button>
+    <button id="btn-factory-reset" class="danger">⚠️ Сбросить всё</button>
 </section>
 
-<!-- ================================================= -->
-<!-- НИЖНЕЕ МЕНЮ -->
-<!-- ================================================= -->
-
-
+<!-- Нижнее меню -->
 <nav class="bottom-nav">
-
-
-<button class="nav-item active">
-
-🏠
-
-<span>
-Главная
-</span>
-
-</button>
-
-
-
-<button class="nav-item">
-
-📈
-
-<span>
-Статистика
-</span>
-
-</button>
-
-
-
-<button class="nav-item">
-
-🏆
-
-<span>
-Достижения
-</span>
-
-</button>
-
-
-
-<button class="nav-item">
-
-⚙️
-
-<span>
-Настройки
-</span>
-
-</button>
-
-
+    <button class="nav-item active">🏠<span>Главная</span></button>
+    <button class="nav-item">📈<span>Статистика</span></button>
+    <button class="nav-item">🏆<span>Достижения</span></button>
+    <button class="nav-item">⚙️<span>Настройки</span></button>
 </nav>
 
-
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+// ===============================================
+// ВЕСЬ APP.JS (исправленный и дополненный)
+// ===============================================
+const tg = window.Telegram?.WebApp;
+if(tg){ tg.ready(); tg.expand(); 
+    const s = document.documentElement.style;
+    s.setProperty('--bg', tg.backgroundColor || '#fff');
+    s.setProperty('--text', tg.textColor || '#000');
+    s.setProperty('--button', tg.buttonColor || '#3390ec');
+    s.setProperty('--button-text', tg.buttonTextColor || '#fff');
+    s.setProperty('--hint', tg.hintColor || '#999');
+    s.setProperty('--secondary-bg', tg.secondaryBackgroundColor || '#f0f0f0');
+}
 
-<script src="app.js?v=2"></script>
+function lsOk(){ try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; } catch(e){ return false; } }
+const LS = lsOk();
+function loadData(k){ return LS ? localStorage.getItem(k) : null; }
+function saveData(k,v){ if(LS) localStorage.setItem(k,v); }
+function removeData(k){ if(LS) localStorage.removeItem(k); }
 
+const $= id => document.getElementById(id);
+const scW = $('screen-welcome'), scS = $('screen-setup'), scT = $('screen-tracker'), scSet = $('screen-settings');
 
+const confirmModal = $('confirm-modal'), confirmYes = $('confirm-yes'), confirmNo = $('confirm-no');
+const habitsContainer = $('habits-container'), settingsListContainer = $('settings-list-container');
+const totalMoneyEl = $('total-money');
+
+let habits = [], timerInterval = null, timerElements = [], userName = 'Друг';
+let currentSetupHabit = null, fromSettings = false, editingHabitId = null, pendingResetId = null, selectedEmoji = '🎯';
+
+const defaultEmojis = ['🚬','💨','🍺','🍷','🎮','📱','🍔','💊','🎯','🏃','📚','💤'];
+
+function showScreen(n){
+    [scW,scS,scT,scSet].forEach(s => s.classList.remove('active'));
+    ({welcome:scW, setup:scS, tracker:scT, settings:scSet})[n].classList.add('active');
+}
+
+function goToWelcome(){ showScreen('welcome'); }
+function goToTracker(){ renderHabits(); updateAllTimers(); showScreen('tracker'); }
+
+if(tg?.BackButton){
+    tg.BackButton.onClick(() => {
+        if(scS.classList.contains('active')){
+            if(fromSettings){ showScreen('settings'); renderSettingsList(); } else { goToWelcome(); }
+        } else if(scSet.classList.contains('active')){
+            goToTracker();
+        }
+    });
+}
+
+function resolveUserName(){
+    userName = tg?.initDataUnsafe?.user?.first_name || tg?.initDataUnsafe?.user?.username || 'Друг';
+}
+
+function renderEmojiPicker(sel='🎯'){
+    selectedEmoji = sel;
+    const picker = $('emoji-picker');
+    picker.innerHTML = '';
+    defaultEmojis.forEach(e => {
+        const sp = document.createElement('span');
+        sp.className = `emoji-option ${e===sel ? 'selected' : ''}`;
+        sp.textContent = e;
+        sp.addEventListener('click', () => renderEmojiPicker(e));
+        picker.appendChild(sp);
+    });
+}
+
+function setDefaultDateTime(){
+    const n = new Date(); n.setMinutes(n.getMinutes() - n.getTimezoneOffset());
+    $('last-use-datetime').value = n.toISOString().slice(0,16);
+}
+
+function fillDateTime(ts){
+    const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    $('last-use-datetime').value = d.toISOString().slice(0,16);
+}
+
+function clearSetupFields(){
+    $('setup-name-input').value = '';
+    $('daily-cost-input').value = '0';
+    $('cig-per-day-input').value = '';
+    $('cig-pack-cost-input').value = '';
+    $('vape-monthly-cost-input').value = '';
+    $('cigarettes-cost-fields').style.display = 'none';
+    $('vape-cost-fields').style.display = 'none';
+    $('cost-block').style.display = 'block';
+    $('habit-label').style.display = 'none';
+    $('setup-custom-block').style.display = 'none';
+    selectedEmoji = '🎯';
+    renderEmojiPicker('🎯');
+}
+
+function selectHabit(type){
+    fromSettings = false; editingHabitId = null;
+    const names = {cigarettes:'Сигареты',vape:'Вейп'};
+    const icons = {cigarettes:'🚬',vape:'💨'};
+    currentSetupHabit = {type, name:names[type]||type, icon:icons[type]||'🎯'};
+    $('setup-name-input').textContent = 'Добавление';
+    clearSetupFields();
+    if(type==='cigarettes') $('cigarettes-cost-fields').style.display = 'block';
+    else if(type==='vape') $('vape-cost-fields').style.display = 'block';
+    if(type!=='custom') $('habit-label').style.display = 'block';
+    $('habit-label').textContent = 'Привычка: ' + currentSetupHabit.icon + ' ' + currentSetupHabit.name;
+    $('setup-save-btn').textContent = '➕ Добавить привычку';
+    $('setup-back-btn').onclick = goToWelcome;
+    showScreen('setup');
+    setDefaultDateTime();
+}
+
+function openSetupFromSettings(){
+    fromSettings = true; editingHabitId = null; currentSetupHabit = null;
+    $('setup-name-input').textContent = 'Новая привычка';
+    clearSetupFields();
+    $('setup-custom-block').style.display = 'block';
+    $('cost-block').style.display = 'block';
+    $('setup-save-btn').textContent = '➕ Добавить привычку';
+    $('setup-back-btn').onclick = () => { showScreen('settings'); renderSettingsList(); };
+    showScreen('setup');
+    setDefaultDateTime();
+}
+
+function openEditHabit(h){
+    fromSettings = true; editingHabitId = h.id; currentSetupHabit = {...h};
+    $('setup-name-input').textContent = 'Редактирование';
+    clearSetupFields();
+    $('setup-custom-block').style.display = 'block';
+    $('cost-block').style.display = 'block';
+    $('setup-name-input').value = h.name;
+    renderEmojiPicker(h.icon);
+    $('daily-cost-input').value = h.costPerDay || 0;
+    fillDateTime(h.startTime);
+    $('setup-save-btn').textContent = '💾 Сохранить';
+    $('setup-back-btn').onclick = () => { showScreen('settings'); renderSettingsList(); };
+    showScreen('setup');
+}
+
+function showCustomInput(){ $('custom-block').style.display = 'block'; $('custom-input').focus(); }
+function confirmCustom(){
+    const v = $('custom-input').value.trim();
+    if(!v) return alert('Введи название привычки');
+    fromSettings = false; editingHabitId = null;
+    currentSetupHabit = {type:'custom', name:v, icon:'🎯'};
+    $('setup-name-input').textContent = 'Добавление';
+    clearSetupFields();
+    $('setup-custom-block').style.display = 'block';
+    $('setup-name-input').value = v;
+    renderEmojiPicker('🎯');
+    $('cost-block').style.display = 'block';
+    $('setup-save-btn').textContent = '➕ Добавить привычку';
+    $('setup-back-btn').onclick = goToWelcome;
+    showScreen('setup');
+    setDefaultDateTime();
+}
+
+function saveHabitFromSetup(){
+    const dt = $('last-use-datetime').value;
+    if(!dt) return alert('Укажи дату и время');
+
+    let name, icon, costPerDay = 0;
+    if(editingHabitId){
+        name = $('setup-name-input').value.trim(); if(!name) return alert('Введи название');
+        icon = selectedEmoji || '🎯';
+        costPerDay = parseFloat($('daily-cost-input').value) || 0;
+    } else if(currentSetupHabit?.type==='cigarettes'){
+        name = 'Сигареты'; icon = '🚬';
+        costPerDay = ((parseFloat($('cig-per-day-input').value)||0)/20) * (parseFloat($('cig-pack-cost-input').value)||0);
+    } else if(currentSetupHabit?.type==='vape'){
+        name = 'Вейп'; icon = '💨';
+        costPerDay = (parseFloat($('vape-monthly-cost-input').value)||0) / 30;
+    } else {
+        name = $('setup-name-input').value.trim(); if(!name) return alert('Введи название привычки');
+        icon = selectedEmoji || '🎯';
+        costPerDay = parseFloat($('daily-cost-input').value) || 0;
+    }
+
+    const startTime = new Date(dt).getTime();
+    if(isNaN(startTime)) return alert('Неверная дата/время');
+    if(startTime > Date.now()) return alert('Дата не может быть в будущем!');
+
+    const hd = { id: editingHabitId || Date.now(), type: 'custom', name, icon, startTime, costPerDay };
+
+    if(editingHabitId){
+        const i = habits.findIndex(h => h.id === editingHabitId);
+        if(i !== -1) habits[i] = hd;
+    } else {
+        habits.push(hd);
+    }
+
+    saveHabits();
+    goToTracker();
+}
+
+function resetHabit(id){
+    pendingResetId = id;
+    confirmModal.style.display = 'flex';
+}
+confirmYes.onclick = () => {
+    if(pendingResetId !== null){
+        const h = habits.find(x => x.id === pendingResetId);
+        if(h){ h.startTime = Date.now(); saveHabits(); renderHabits(); updateAllTimers(); }
+        pendingResetId = null;
+    }
+    confirmModal.style.display = 'none';
+};
+confirmNo.onclick = () => { pendingResetId = null; confirmModal.style.display = 'none'; };
+
+function deleteHabit(id){
+    if(!confirm('Точно удалить эту привычку?')) return;
+    habits = habits.filter(h => h.id !== id);
+    saveHabits();
+    renderSettingsList();
+    renderHabits();
+    updateAllTimers();
+    if(habits.length === 0 && timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+}
+
+function formatTimeDiff(ms){
+    const t = Math.floor(ms/1000);
+    return `${Math.floor(t/86400)}д ${Math.floor((t%86400)/3600)}ч ${Math.floor((t%3600)/60)}м ${t%60}с`;
+}
+
+function getAchievement(d){
+    if(d>=365) return '🏆 Год без!';
+    if(d>=180) return '🎉 Полгода!';
+    if(d>=90) return '💪 3 месяца!';
+    if(d>=30) return '🌟 Месяц!';
+    if(d>=7) return '🔥 Неделя!';
+    if(d>=1) return '👍 1 день!';
+    return '';
+}
+
+function renderHabits(){
+    if(habits.length === 0){
+        habitsContainer.innerHTML = '<p style="margin-top:20px; text-align:center;">У тебя пока нет привычек. Добавь их в настройках!</p>';
+        totalMoneyEl.textContent = '';
+        timerElements = [];
+        return;
+    }
+    habitsContainer.innerHTML = '';
+    timerElements = [];
+    habits.forEach(h => {
+        const diff = Math.max(0, Date.now() - h.startTime);
+        const days = Math.floor(diff / 86400000);
+        const moneySaved = (h.costPerDay || 0) * days;
+        const ach = getAchievement(days);
+
+        const card = document.createElement('div');
+        card.className = 'habit-card';
+
+        const ic = document.createElement('div'); ic.className = 'icon'; ic.textContent = h.icon;
+        const nm = document.createElement('div'); nm.className = 'habit-name'; nm.textContent = h.name;
+        const tm = document.createElement('div'); tm.className = 'timer'; tm.dataset.id = h.id; tm.textContent = formatTimeDiff(diff);
+
+        card.appendChild(ic); card.appendChild(nm); card.appendChild(tm);
+
+        if(moneySaved > 0){
+            const m = document.createElement('div'); m.className = 'money'; m.textContent = `💰 Сэкономлено ≈ ${Math.round(moneySaved)} ₽`;
+            card.appendChild(m);
+        }
+        if(ach){
+            const a = document.createElement('div'); a.className = 'achievement'; a.textContent = ach;
+            card.appendChild(a);
+        }
+
+        const rb = document.createElement('button'); rb.className = 'reset-btn'; rb.textContent = '😞 Я сорвался';
+        rb.addEventListener('click', e => { e.stopPropagation(); resetHabit(h.id); });
+        card.appendChild(rb);
+
+        habitsContainer.appendChild(card);
+        timerElements.push({element: tm, id: h.id});
+    });
+}
+
+function renderSettingsList(){
+    if(habits.length === 0){ settingsListContainer.innerHTML = '<p style="margin-top:10px;">Список пуст.</p>'; return; }
+    settingsListContainer.innerHTML = '';
+    habits.forEach(h => {
+        const item = document.createElement('div'); item.className = 'settings-list-item';
+        const sp = document.createElement('span'); sp.textContent = h.icon + ' ' + h.name;
+
+        const bg = document.createElement('div'); bg.className = 'btn-group';
+        const eb = document.createElement('button'); eb.textContent = '✏️'; eb.addEventListener('click', () => openEditHabit(h));
+        const db = document.createElement('button'); db.className = 'del-btn'; db.textContent = 'Удалить'; db.addEventListener('click', () => deleteHabit(h.id));
+
+        bg.appendChild(eb); bg.appendChild(db);
+        item.appendChild(sp); item.appendChild(bg);
+        settingsListContainer.appendChild(item);
+    });
+}
+
+function showSettings(){
+    renderSettingsList(); showScreen('settings');
+}
+
+function updateAllTimers(){
+    let total = 0;
+    timerElements.forEach(({element, id}) => {
+        const h = habits.find(x => x.id == id);
+        if(h){
+            const diff = Math.max(0, Date.now() - h.startTime);
+            element.textContent = formatTimeDiff(diff);
+            total += (h.costPerDay || 0) * (diff / 86400000);
+        }
+    });
+    if(totalMoneyEl) totalMoneyEl.textContent = total > 0 ? `Общая экономия: ≈ ${Math.round(total)} ₽` : '';
+}
+
+function saveHabits(){ saveData('habitsData', JSON.stringify(habits)); }
+function loadHabits(){ const d = loadData('habitsData'); try{ habits = d ? JSON.parse(d) : []; } catch(e){ habits = []; } }
+
+function factoryReset(){
+    if(!confirm('⚠️ Ты уверен? Все привычки будут удалены.')) return;
+    removeData('habitsData'); habits = []; if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+    timerElements = []; resolveUserName(); goToWelcome();
+}
+
+function init(){
+    resolveUserName(); loadHabits();
+    if(habits.length > 0) goToTracker(); else goToWelcome();
+    timerInterval = setInterval(() => {
+        if(scT.classList.contains('active')) updateAllTimers();
+    }, 1000);
+}
+
+// События
+$('btn-cigarettes').addEventListener('click', () => selectHabit('cigarettes'));
+$('btn-vape').addEventListener('click', () => selectHabit('vape'));
+$('btn-custom').addEventListener('click', showCustomInput);
+$('btn-confirm-custom').addEventListener('click', confirmCustom);
+$('setup-save-btn').addEventListener('click', saveHabitFromSetup);
+$('btn-open-settings').addEventListener('click', showSettings);
+$('btn-add-from-settings').addEventListener('click', openSetupFromSettings);
+$('btn-back-to-tracker').addEventListener('click', goToTracker);
+$('btn-factory-reset').addEventListener('click', factoryReset);
+
+init();
+</script>
 </body>
-
 </html>
