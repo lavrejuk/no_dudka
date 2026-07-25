@@ -2,17 +2,23 @@
 'use strict';
 const tg = window.Telegram ? window.Telegram.WebApp : null;
 
-if(tg){
+function applyTheme(){
+    if(!tg) return;
     tg.ready();
     tg.expand();
-    const s=document.documentElement.style;
-    s.setProperty('--bg',tg.backgroundColor||'#fff');
-    s.setProperty('--text',tg.textColor||'#000');
-    s.setProperty('--button',tg.buttonColor||'#3390ec');
-    s.setProperty('--button-text',tg.buttonTextColor||'#fff');
-    s.setProperty('--hint',tg.hintColor||'#999');
-    s.setProperty('--secondary-bg',tg.secondaryBackgroundColor||'#f0f0f0');
+    const s = document.documentElement.style;
+    const isDark = tg.colorScheme === 'dark';
+    
+    s.setProperty('--bg', tg.backgroundColor || (isDark ? '#0f172a' : '#f8fafc'));
+    s.setProperty('--card', tg.secondaryBackgroundColor || (isDark ? '#1e293b' : '#ffffff'));
+    s.setProperty('--text', tg.textColor || (isDark ? '#f8fafc' : '#0f172a'));
+    s.setProperty('--hint', tg.hintColor || (isDark ? '#94a3b8' : '#64748b'));
+    s.setProperty('--button', tg.buttonColor || '#3b82f6');
+    s.setProperty('--button-text', tg.buttonTextColor || '#ffffff');
 }
+
+applyTheme();
+if(tg) tg.onEvent('themeChanged', applyTheme);
 
 function lsOk(){try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}}
 const LS=lsOk();
