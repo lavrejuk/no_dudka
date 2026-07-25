@@ -202,7 +202,6 @@ function renderHabits(){
         card.appendChild(ic);card.appendChild(nm);card.appendChild(tm);
         
         if(moneySaved>0){const m=document.createElement('div');m.className='money';m.textContent=`💰 Сэкономлено ≈ ${Math.round(moneySaved)} ₽`;card.appendChild(m);}
-        if(ach){const a=document.createElement('div');a.className='achievement';a.textContent=ach;card.appendChild(a);}
         
         const rb=document.createElement('button');rb.className='reset-btn';rb.textContent='😞 Я сорвался';
         rb.addEventListener('click',e=>{e.stopPropagation();resetHabit(h.id);});
